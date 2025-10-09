@@ -1,0 +1,20 @@
+ar:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          divine_rapier_ai_translator: "مترجم الذكاء الاصطناعي"
+  js:
+    divine_rapier_ai_translator:
+      title: "مترجم الذكاء الاصطناعي"
+      translate: "ترجمة"
+      translating: "جاري الترجمة..."
+      translated: "تمت الترجمة"
+      error: "فشلت الترجمة"
+      select_language: "اختر اللغة"
+      available_translations: "الترجمات المتاحة"
+      no_translations: "لا توجد ترجمات متاحة"
+      delete_translation: "حذف الترجمة"
+      confirm_delete: "هل أنت متأكد من أنك تريد حذف هذه الترجمة؟"
+  ai_translator:
+    title: "مترجم الذكاء الاصطناعي"

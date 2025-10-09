@@ -1,0 +1,20 @@
+ja:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          divine_rapier_ai_translator: "AI翻訳器"
+  js:
+    divine_rapier_ai_translator:
+      title: "AI翻訳器"
+      translate: "翻訳"
+      translating: "翻訳中..."
+      translated: "翻訳済み"
+      error: "翻訳に失敗しました"
+      select_language: "言語を選択"
+      available_translations: "利用可能な翻訳"
+      no_translations: "翻訳がありません"
+      delete_translation: "翻訳を削除"
+      confirm_delete: "この翻訳を削除してもよろしいですか？"
+  ai_translator:
+    title: "AI翻訳器"

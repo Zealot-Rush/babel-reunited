@@ -1,0 +1,159 @@
+<% content_for :title do %>
+  <%= I18n.t("ai_translator.title") %>
+<% end %>
+
+<div class="ai-translator-admin">
+  <h2><%= I18n.t("ai_translator.title") %></h2>
+  
+  <div class="admin-content">
+    <h3>Translation Statistics</h3>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <strong>Total Translations:</strong>
+        <span><%= DivineRapierAiTranslator::PostTranslation.count %></span>
+      </div>
+      <div class="stat-item">
+        <strong>Unique Languages:</strong>
+        <span><%= DivineRapierAiTranslator::PostTranslation.distinct.count(:language) %></span>
+      </div>
+      <div class="stat-item">
+        <strong>Most Translated Language:</strong>
+        <span>
+          <% most_common = DivineRapierAiTranslator::PostTranslation.group(:language).count.max_by { |k, v| v } %>
+          <%= most_common ? "#{most_common[0]} (#{most_common[1]} translations)" : "N/A" %>
+        </span>
+      </div>
+    </div>
+
+    <h3>Recent Translations</h3>
+    <div class="recent-translations">
+      <% recent_translations = DivineRapierAiTranslator::PostTranslation.includes(:post).recent.limit(10) %>
+      <% if recent_translations.any? %>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Post</th>
+              <th>Language</th>
+              <th>Provider</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recent_translations.each do |translation| %>
+              <tr>
+                <td>
+                  <%= link_to "Post ##{translation.post.id}", "/t/#{translation.post.topic.slug}/#{translation.post.topic.id}/#{translation.post.post_number}" %>
+                </td>
+                <td><%= translation.language %></td>
+                <td><%= translation.translation_provider %></td>
+                <td><%= translation.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p>No translations found.</p>
+      <% end %>
+    </div>
+
+    <h3>Language Distribution</h3>
+    <div class="language-stats">
+      <% language_counts = DivineRapierAiTranslator::PostTranslation.group(:language).count %>
+      <% if language_counts.any? %>
+        <div class="language-chart">
+          <% language_counts.sort_by { |k, v| -v }.each do |language, count| %>
+            <div class="language-bar">
+              <span class="language-code"><%= language %></span>
+              <div class="bar-container">
+                <div class="bar" style="width: <%= (count.to_f / language_counts.values.max * 100).round(1) %>%"></div>
+                <span class="count"><%= count %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p>No language data available.</p>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+.ai-translator-admin {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #007bff;
+}
+
+.language-chart {
+  margin-top: 20px;
+}
+
+.language-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.language-code {
+  min-width: 60px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.bar-container {
+  flex: 1;
+  position: relative;
+  background: #e9ecef;
+  height: 25px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transition: width 0.3s ease;
+}
+
+.count {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+  color: #333;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+</style>

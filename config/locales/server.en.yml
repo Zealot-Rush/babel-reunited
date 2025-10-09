@@ -1,0 +1,10 @@
+en:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "Enable AI Translator plugin"
+    divine_rapier_ai_translator_model: "OpenAI model to use for translation"
+    divine_rapier_ai_translator_auto_translate_languages: "Auto-translate to languages (comma-separated language codes)"
+    divine_rapier_ai_translator_openai_api_key: "OpenAI API Key"
+    divine_rapier_ai_translator_openai_base_url: "OpenAI Base URL (leave empty for default OpenAI API, or enter custom OpenAI-compatible API URL)"
+    divine_rapier_ai_translator_rate_limit_per_minute: "Rate limit per minute"
+    divine_rapier_ai_translator_max_content_length: "Maximum content length for translation"
+    divine_rapier_ai_translator_preserve_formatting: "Preserve markdown/HTML formatting"

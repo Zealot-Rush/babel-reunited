@@ -1,0 +1,20 @@
+ru:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          divine_rapier_ai_translator: "ИИ Переводчик"
+  js:
+    divine_rapier_ai_translator:
+      title: "ИИ Переводчик"
+      translate: "Перевести"
+      translating: "Переводим..."
+      translated: "Переведено"
+      error: "Ошибка перевода"
+      select_language: "Выберите язык"
+      available_translations: "Доступные переводы"
+      no_translations: "Переводы недоступны"
+      delete_translation: "Удалить перевод"
+      confirm_delete: "Вы уверены, что хотите удалить этот перевод?"
+  ai_translator:
+    title: "ИИ Переводчик"

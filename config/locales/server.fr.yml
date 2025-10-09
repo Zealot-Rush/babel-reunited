@@ -1,0 +1,10 @@
+fr:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "Activer le plugin Traducteur IA"
+    divine_rapier_ai_translator_model: "Modèle OpenAI à utiliser pour la traduction"
+    divine_rapier_ai_translator_auto_translate_languages: "Langues de traduction automatique (codes de langue séparés par des virgules)"
+    divine_rapier_ai_translator_openai_api_key: "Clé API OpenAI"
+    divine_rapier_ai_translator_openai_base_url: "URL de base OpenAI (laisser vide pour l'API OpenAI par défaut, ou entrer une URL d'API compatible OpenAI personnalisée)"
+    divine_rapier_ai_translator_rate_limit_per_minute: "Limite de débit par minute"
+    divine_rapier_ai_translator_max_content_length: "Longueur maximale du contenu pour la traduction"
+    divine_rapier_ai_translator_preserve_formatting: "Préserver le formatage markdown/HTML"

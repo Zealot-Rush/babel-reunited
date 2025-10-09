@@ -1,0 +1,35 @@
+divine_rapier_ai_translator:
+  divine_rapier_ai_translator_enabled:
+    default: false
+    client: true
+
+  divine_rapier_ai_translator_model:
+    default: "gpt-3.5-turbo"
+    client: true
+
+  divine_rapier_ai_translator_auto_translate_languages:
+    default: ""
+    client: true
+
+  divine_rapier_ai_translator_openai_api_key:
+    default: ""
+    secret: true
+
+  divine_rapier_ai_translator_openai_base_url:
+    default: ""
+    client: false
+
+
+  divine_rapier_ai_translator_rate_limit_per_minute:
+    default: 60
+    min: 1
+    max: 1000
+
+  divine_rapier_ai_translator_max_content_length:
+    default: 4000
+    min: 100
+    max: 10000
+
+  divine_rapier_ai_translator_preserve_formatting:
+    default: true
+    client: true

@@ -1,0 +1,10 @@
+ja:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "AI翻訳器プラグインを有効にする"
+    divine_rapier_ai_translator_model: "翻訳に使用するOpenAIモデル"
+    divine_rapier_ai_translator_auto_translate_languages: "自動翻訳する言語（カンマ区切りの言語コード）"
+    divine_rapier_ai_translator_openai_api_key: "OpenAI APIキー"
+    divine_rapier_ai_translator_openai_base_url: "OpenAIベースURL（デフォルトのOpenAI APIを使用する場合は空欄、またはカスタムOpenAI互換API URLを入力）"
+    divine_rapier_ai_translator_rate_limit_per_minute: "1分あたりのレート制限"
+    divine_rapier_ai_translator_max_content_length: "翻訳の最大コンテンツ長"
+    divine_rapier_ai_translator_preserve_formatting: "markdown/HTMLフォーマットを保持"

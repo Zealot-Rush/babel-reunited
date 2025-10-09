@@ -1,0 +1,10 @@
+hi:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "AI अनुवादक प्लगइन सक्षम करें"
+    divine_rapier_ai_translator_model: "अनुवाद के लिए उपयोग करने के लिए OpenAI मॉडल"
+    divine_rapier_ai_translator_auto_translate_languages: "स्वचालित अनुवाद भाषाएं (अल्पविराम से अलग किए गए भाषा कोड)"
+    divine_rapier_ai_translator_openai_api_key: "OpenAI API कुंजी"
+    divine_rapier_ai_translator_openai_base_url: "OpenAI बेस URL (डिफ़ॉल्ट OpenAI API के लिए खाली छोड़ें, या कस्टम OpenAI-संगत API URL दर्ज करें)"
+    divine_rapier_ai_translator_rate_limit_per_minute: "प्रति मिनट दर सीमा"
+    divine_rapier_ai_translator_max_content_length: "अनुवाद के लिए अधिकतम सामग्री लंबाई"
+    divine_rapier_ai_translator_preserve_formatting: "markdown/HTML फ़ॉर्मेटिंग संरक्षित करें"

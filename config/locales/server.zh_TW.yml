@@ -1,0 +1,10 @@
+zh_TW:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "啟用AI翻譯器插件"
+    divine_rapier_ai_translator_model: "用於翻譯的OpenAI模型"
+    divine_rapier_ai_translator_auto_translate_languages: "自動翻譯語言（逗號分隔的語言代碼）"
+    divine_rapier_ai_translator_openai_api_key: "OpenAI API密鑰"
+    divine_rapier_ai_translator_openai_base_url: "OpenAI基礎URL（留空使用預設OpenAI API，或輸入自訂OpenAI相容API URL）"
+    divine_rapier_ai_translator_rate_limit_per_minute: "每分鐘速率限制"
+    divine_rapier_ai_translator_max_content_length: "翻譯的最大內容長度"
+    divine_rapier_ai_translator_preserve_formatting: "保留markdown/HTML格式"

@@ -1,0 +1,10 @@
+ar:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "تفعيل إضافة مترجم الذكاء الاصطناعي"
+    divine_rapier_ai_translator_model: "نموذج OpenAI المستخدم للترجمة"
+    divine_rapier_ai_translator_auto_translate_languages: "اللغات للترجمة التلقائية (رموز اللغات مفصولة بفواصل)"
+    divine_rapier_ai_translator_openai_api_key: "مفتاح API الخاص بـ OpenAI"
+    divine_rapier_ai_translator_openai_base_url: "رابط OpenAI الأساسي (اتركه فارغاً لاستخدام API الافتراضي، أو أدخل رابط API مخصص متوافق مع OpenAI)"
+    divine_rapier_ai_translator_rate_limit_per_minute: "حد المعدل في الدقيقة"
+    divine_rapier_ai_translator_max_content_length: "الحد الأقصى لطول المحتوى للترجمة"
+    divine_rapier_ai_translator_preserve_formatting: "الحفاظ على تنسيق markdown/HTML"

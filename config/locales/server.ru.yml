@@ -1,0 +1,10 @@
+ru:
+  site_settings:
+    divine_rapier_ai_translator_enabled: "Включить плагин ИИ Переводчик"
+    divine_rapier_ai_translator_model: "Модель OpenAI для перевода"
+    divine_rapier_ai_translator_auto_translate_languages: "Автоматический перевод на языки (коды языков через запятую)"
+    divine_rapier_ai_translator_openai_api_key: "API ключ OpenAI"
+    divine_rapier_ai_translator_openai_base_url: "Базовый URL OpenAI (оставить пустым для API OpenAI по умолчанию, или ввести пользовательский URL API, совместимый с OpenAI)"
+    divine_rapier_ai_translator_rate_limit_per_minute: "Ограничение скорости в минуту"
+    divine_rapier_ai_translator_max_content_length: "Максимальная длина контента для перевода"
+    divine_rapier_ai_translator_preserve_formatting: "Сохранять форматирование markdown/HTML"

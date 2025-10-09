@@ -1,0 +1,20 @@
+es:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          divine_rapier_ai_translator: "Traductor IA"
+  js:
+    divine_rapier_ai_translator:
+      title: "Traductor IA"
+      translate: "Traducir"
+      translating: "Traduciendo..."
+      translated: "Traducido"
+      error: "Error en la traducción"
+      select_language: "Seleccionar idioma"
+      available_translations: "Traducciones disponibles"
+      no_translations: "No hay traducciones disponibles"
+      delete_translation: "Eliminar traducción"
+      confirm_delete: "¿Estás seguro de que quieres eliminar esta traducción?"
+  ai_translator:
+    title: "Traductor IA"
