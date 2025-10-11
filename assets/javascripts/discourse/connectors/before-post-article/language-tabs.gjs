@@ -15,7 +15,7 @@ export default class LanguageTabsConnector extends Component {
   // 获取按钮样式 - 使用箭头函数保持this上下文
   getButtonStyle = (languageCode) => {
     const baseStyle =
-      "padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; height: 24px; line-height: 1;";
+      "padding: 4px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; height: 24px; line-height: 1;";
 
     if (this.currentLanguage === languageCode) {
       return baseStyle + " background: #007bff; color: white; border: none;";
@@ -37,18 +37,6 @@ export default class LanguageTabsConnector extends Component {
 
   get post() {
     return this.args.post;
-  }
-
-  get hasTranslations() {
-    // 只有当真正有翻译数据时才显示tabs
-    const hasTranslationData =
-      this.post?.post_translations && this.post.post_translations.length > 0;
-
-    const hasTranslationFlag =
-      this.post?.show_translation_widget || this.post?.show_translation_button;
-
-    // 必须同时满足：有翻译标志 AND 有实际的翻译数据
-    return hasTranslationFlag && hasTranslationData;
   }
 
   get availableLanguages() {
@@ -138,43 +126,28 @@ export default class LanguageTabsConnector extends Component {
   }
 
   <template>
-    {{#if this.hasTranslations}}
-      <div
-        style="
-        margin: 3px 0;
-        font-family: Arial, sans-serif;
-      "
+    {{! 语言切换标签 }}
+    <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; margin-left: 12px;">
+      <button
+        style={{this.getButtonStyle "original"}}
+        {{on "click" (fn this.switchLanguage "original")}}
       >
-        <div style="display: flex; gap: 3px; flex-wrap: wrap;">
-          <button
-            style={{this.getButtonStyle "original"}}
-            {{on "click" (fn this.switchLanguage "original")}}
-          >
-            Raw
-          </button>
+        Raw
+      </button>
 
-          {{#each this.languageNames as |langInfo|}}
-            <button
-              style={{this.getButtonStyle langInfo.code}}
-              {{on "click" (fn this.switchLanguage langInfo.code)}}
-            >
-              {{langInfo.name}}
-            </button>
-          {{/each}}
-        </div>
-
-        {{! 显示当前选中的内容 }}
-        <div
-          style="margin-top: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;"
+      {{#each this.languageNames as |langInfo|}}
+        <button
+          style={{this.getButtonStyle langInfo.code}}
+          {{on "click" (fn this.switchLanguage langInfo.code)}}
         >
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
-            {{this.currentLanguageName}}
-          </div>
-          <div class="cooked">
-            {{htmlSafe this.currentContent}}
-          </div>
-        </div>
-      </div>
-    {{/if}}
+          {{langInfo.name}}
+        </button>
+      {{/each}}
+    </div>
+
+    {{! 替换原post内容，直接显示当前选中的内容 }}
+    <div class="cooked">
+      {{htmlSafe this.currentContent}}
+    </div>
   </template>
 }
