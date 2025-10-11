@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
-  class BatchTranslatePostsJob < ::Jobs::Base
+class DivineRapierAiTranslatorBatchTranslatePostsJob < ::Jobs::Base
     def execute(args)
       post_ids = args[:post_ids]
       target_languages = args[:target_languages] || []
@@ -14,7 +13,7 @@ module DivineRapierAiTranslator
           delay = rand(1..5).seconds
           Jobs.enqueue_in(
             delay,
-            :translate_post,
+            DivineRapierAiTranslatorTranslatePostJob,
             post_id: post_id,
             target_language: language
           )
@@ -22,4 +21,3 @@ module DivineRapierAiTranslator
       end
     end
   end
-end

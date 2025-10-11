@@ -28,6 +28,7 @@ after_initialize do
   require_relative "app/controllers/divine_rapier_ai_translator/admin_controller"
   require_relative "app/serializers/divine_rapier_ai_translator/post_translation_serializer"
   require_relative "lib/divine_rapier_ai_translator/rate_limiter"
+  require_relative "lib/divine_rapier_ai_translator/translation_logger"
 
   # Mount the engine routes
   Discourse::Application.routes.append do
@@ -67,7 +68,7 @@ after_initialize do
           next if has_translation?(language)
 
           Jobs.enqueue(
-            :translate_post,
+            DivineRapierAiTranslatorTranslatePostJob,
             post_id: id,
             target_language: language
           )
@@ -78,7 +79,7 @@ after_initialize do
         return if target_languages.blank?
 
         Jobs.enqueue(
-          :batch_translate_posts,
+          DivineRapierAiTranslatorBatchTranslatePostsJob,
           post_ids: [id],
           target_languages: target_languages
         )

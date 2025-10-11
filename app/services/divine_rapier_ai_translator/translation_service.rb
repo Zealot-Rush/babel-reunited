@@ -37,6 +37,7 @@ module DivineRapierAiTranslator
       # Save translation
       translation = create_translation(translation_result)
       context[:translation] = translation
+      context[:ai_response] = translation_result  # Add AI response to context for logging
       context
     end
 
