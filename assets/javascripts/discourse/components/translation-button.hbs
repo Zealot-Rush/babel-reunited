@@ -1,0 +1,34 @@
+<div class="ai-translation-button-container">
+  <button 
+    class="btn btn-primary ai-translation-main-btn {{if this.hasTranslations 'has-translations'}}"
+    {{on "click" this.toggleQuickLanguages}}
+  >
+    <i class="fa {{if this.hasTranslations 'fa-globe' 'fa-plus'}}"></i>
+    <span>{{this.buttonText}}</span>
+  </button>
+
+  {{#if this.showQuickLanguages}}
+    <div class="ai-quick-languages">
+      <div class="ai-quick-languages-header">
+        <span>{{i18n "js.divine_rapier_ai_translator.quick_translate"}}</span>
+        <button 
+          class="btn btn-sm btn-secondary ai-close-quick"
+          {{on "click" this.toggleQuickLanguages}}
+        >
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="ai-quick-language-grid">
+        {{#each this.quickLanguages as |lang|}}
+          <button 
+            class="btn btn-outline ai-quick-language"
+            {{on "click" (fn this.quickTranslate lang.code)}}
+          >
+            <span class="ai-quick-language-name">{{lang.name}}</span>
+            <span class="ai-quick-language-code">{{lang.code}}</span>
+          </button>
+        {{/each}}
+      </div>
+    </div>
+  {{/if}}
+</div>

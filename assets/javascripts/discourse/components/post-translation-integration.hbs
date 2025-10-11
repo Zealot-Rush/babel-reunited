@@ -1,0 +1,42 @@
+{{#if this.shouldShowWidget}}
+  <div class="post-translation-widget-wrapper">
+    <div class="ai-translation-widget">
+      <div class="ai-translation-header">
+        <div class="ai-translation-title">
+          <i class="fa fa-language"></i>
+          <span>{{i18n "js.divine_rapier_ai_translator.available_translations"}}</span>
+        </div>
+      </div>
+      <div class="ai-translation-content">
+        <div class="ai-translation-tabs">
+          <div class="ai-translation-tab ai-original-tab active">
+            <i class="fa fa-file-text"></i>
+            <span>{{i18n "js.divine_rapier_ai_translator.original"}}</span>
+          </div>
+          {{#each @postTranslations as |translation|}}
+            <div class="ai-translation-tab">
+              <i class="fa fa-globe"></i>
+              <span class="ai-language-code">{{translation.language}}</span>
+            </div>
+          {{/each}}
+        </div>
+        <div class="ai-translation-content">
+          <div class="ai-content-body">
+            <div class="ai-post-content">{{@originalContent}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{{/if}}
+
+{{#if this.shouldShowButton}}
+  <div class="post-translation-button-wrapper">
+    <div class="ai-translation-button-container">
+      <button class="btn btn-primary ai-translation-main-btn">
+        <i class="fa fa-globe"></i>
+        <span>{{i18n "js.divine_rapier_ai_translator.translate"}}</span>
+      </button>
+    </div>
+  </div>
+{{/if}}

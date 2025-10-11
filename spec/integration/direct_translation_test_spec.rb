@@ -8,7 +8,7 @@ RSpec.describe "Direct Translation Test", type: :integration do
 
   before do
     SiteSetting.divine_rapier_ai_translator_enabled = true
-    SiteSetting.divine_rapier_ai_translator_auto_translate_languages = "en,zh-CN"
+    SiteSetting.divine_rapier_ai_translator_auto_translate_languages = "en,zh,es"
   end
 
   describe "manual translation job enqueuing" do

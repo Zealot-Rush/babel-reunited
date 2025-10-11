@@ -8,7 +8,7 @@ divine_rapier_ai_translator:
     client: true
 
   divine_rapier_ai_translator_auto_translate_languages:
-    default: ""
+    default: "zh,en,es"
     client: true
 
   divine_rapier_ai_translator_openai_api_key:

@@ -1,0 +1,151 @@
+{{#if this.hasTranslations}}
+  <div class="ai-translation-widget">
+    <div class="ai-translation-header">
+      <div class="ai-translation-title">
+        <i class="fa fa-language"></i>
+        <span>{{i18n "js.divine_rapier_ai_translator.available_translations"}}</span>
+      </div>
+      <div class="ai-translation-actions">
+        {{#if this.loading}}
+          <button class="btn btn-primary ai-translate-btn loading">
+            <i class="fa fa-spinner fa-spin"></i>
+            <span>{{i18n "js.divine_rapier_ai_translator.translating"}}</span>
+          </button>
+        {{else}}
+          <button 
+            class="btn btn-primary ai-translate-btn"
+            {{on "click" this.toggleLanguageSelector}}
+          >
+            <i class="fa fa-plus"></i>
+            <span>{{i18n "js.divine_rapier_ai_translator.translate"}}</span>
+          </button>
+        {{/if}}
+        {{#if (gt @availableTranslations.length 1)}}
+          <button 
+            class="btn btn-secondary ai-language-toggle"
+            {{on "click" this.toggleLanguageSelector}}
+          >
+            <i class="fa fa-globe"></i>
+            <span>{{i18n "js.divine_rapier_ai_translator.select_language"}}</span>
+          </button>
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if this.showLanguageSelector}}
+      <div class="ai-language-selector">
+        <div class="ai-language-selector-header">
+          <h4>{{i18n "js.divine_rapier_ai_translator.select_language"}}</h4>
+          <button 
+            class="btn btn-sm btn-secondary ai-close-selector"
+            {{on "click" this.toggleLanguageSelector}}
+          >
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="ai-language-options">
+          {{#each this.supportedLanguages as |lang|}}
+            <button 
+              class="btn btn-outline ai-language-option {{if (includes @availableTranslations lang.code) 'available'}}"
+              {{on "click" (fn this.translateToLanguage lang.code)}}
+            >
+              <span class="ai-language-name">{{lang.name}}</span>
+              <span class="ai-language-code">{{lang.code}}</span>
+              {{#if (includes @availableTranslations lang.code)}}
+                <i class="fa fa-check ai-translation-exists"></i>
+              {{/if}}
+            </button>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+
+    <div class="ai-translation-content">
+      <div class="ai-translation-tabs">
+        <div 
+          class="ai-translation-tab ai-original-tab {{if this.showOriginal 'active'}}"
+          {{on "click" this.showOriginalContent}}
+        >
+          <i class="fa fa-file-text"></i>
+          <span>{{i18n "js.divine_rapier_ai_translator.original"}}</span>
+        </div>
+        {{#each @postTranslations as |translation|}}
+          <div 
+            class="ai-translation-tab {{if (and (eq this.selectedLanguage translation.language) (not this.showOriginal)) 'active'}}"
+            {{on "click" (fn this.showTranslation translation)}}
+          >
+            <i class="fa fa-globe"></i>
+            <span class="ai-language-code">{{translation.language}}</span>
+            <span class="ai-language-name">{{this.getLanguageName translation.language}}</span>
+          </div>
+        {{/each}}
+      </div>
+
+      <div class="ai-translation-content">
+        {{#if this.showOriginal}}
+          <div class="ai-content-header">
+            <i class="fa fa-file-text"></i>
+            <span>{{i18n "js.divine_rapier_ai_translator.original_content"}}</span>
+          </div>
+          <div class="ai-content-body">
+            <div class="ai-post-content">{{this.originalContent}}</div>
+          </div>
+        {{else}}
+          {{#let (find-by "language" this.selectedLanguage @postTranslations) as |selectedTranslation|}}
+            {{#if selectedTranslation}}
+              <div class="ai-content-header">
+                <i class="fa fa-globe"></i>
+                <span>{{i18n "js.divine_rapier_ai_translator.translated_content" language=(this.getLanguageName selectedTranslation.language)}}</span>
+                <div class="ai-translation-meta">
+                  <span class="ai-translation-provider">{{selectedTranslation.translation_provider}}</span>
+                  <span class="ai-translation-confidence">{{this.confidencePercentage selectedTranslation.confidence}}%</span>
+                </div>
+              </div>
+              <div class="ai-content-body">
+                <div class="ai-translated-text">{{selectedTranslation.translated_content}}</div>
+                <div class="ai-translation-footer">
+                  <div class="ai-translation-info">
+                    <span class="ai-translation-date">
+                      {{i18n "js.divine_rapier_ai_translator.translated_on" date=(format-date selectedTranslation.created_at)}}
+                    </span>
+                    <span class="ai-translation-source">
+                      {{i18n "js.divine_rapier_ai_translator.source_language" language=(or selectedTranslation.source_language "Auto-detected")}}
+                    </span>
+                  </div>
+                  <div class="ai-translation-actions">
+                    <button 
+                      class="btn btn-sm btn-outline ai-refresh-translation"
+                      {{on "click" (fn this.refreshTranslation selectedTranslation)}}
+                    >
+                      <i class="fa fa-refresh"></i>
+                      <span>{{i18n "js.divine_rapier_ai_translator.refresh"}}</span>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-danger ai-delete-translation"
+                      {{on "click" (fn this.deleteTranslation selectedTranslation)}}
+                    >
+                      <i class="fa fa-trash"></i>
+                      <span>{{i18n "js.divine_rapier_ai_translator.delete"}}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            {{else}}
+              <div class="ai-no-translation">
+                <i class="fa fa-exclamation-triangle"></i>
+                <p>{{i18n "js.divine_rapier_ai_translator.translation_not_found"}}</p>
+              </div>
+            {{/if}}
+          {{/let}}
+        {{/if}}
+      </div>
+    </div>
+  </div>
+{{else}}
+  <div class="ai-translation-empty">
+    <div class="ai-translation-empty-content">
+      <i class="fa fa-language"></i>
+      <span>{{i18n "js.divine_rapier_ai_translator.no_translations"}}</span>
+    </div>
+  </div>
+{{/if}}

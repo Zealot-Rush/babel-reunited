@@ -16,16 +16,17 @@ end
 
 require_relative "lib/divine_rapier_ai_translator/engine"
 
+# Load PostTranslation model BEFORE after_initialize
+require_relative "app/models/divine_rapier_ai_translator/post_translation"
+
 after_initialize do
-  # Load all required files
-  require_relative "app/models/divine_rapier_ai_translator/post_translation"
+  # Load other required files
   require_relative "app/services/divine_rapier_ai_translator/translation_service"
   require_relative "app/jobs/regular/divine_rapier_ai_translator/translate_post_job"
   require_relative "app/jobs/regular/divine_rapier_ai_translator/batch_translate_posts_job"
   require_relative "app/controllers/divine_rapier_ai_translator/translations_controller"
   require_relative "app/controllers/divine_rapier_ai_translator/admin_controller"
   require_relative "app/serializers/divine_rapier_ai_translator/post_translation_serializer"
-  require_relative "lib/divine_rapier_ai_translator/post_extension"
   require_relative "lib/divine_rapier_ai_translator/rate_limiter"
 
   # Mount the engine routes
@@ -86,24 +87,21 @@ after_initialize do
   end
 
   # Add translation methods to PostSerializer
-  add_to_serializer(:post, :available_translations) do
+  add_to_serializer(:post, :available_translations, include_condition: -> { true }) do
     object.available_translations
   end
 
-  add_to_serializer(:post, :post_translations) do
-    ActiveModel::ArraySerializer.new(
-      object.post_translations.recent.limit(5),
-      each_serializer: DivineRapierAiTranslator::PostTranslationSerializer
-    ).as_json
+  add_to_serializer(:post, :post_translations, include_condition: -> { true }) do
+    object.post_translations.recent.limit(5).map do |translation|
+      DivineRapierAiTranslator::PostTranslationSerializer.new(translation).as_json
+    end
   end
 
-  # Add translation widgets to post display
-  add_to_serializer(:post, :show_translation_widget) do
+  add_to_serializer(:post, :show_translation_widget, include_condition: -> { true }) do
     object.post_translations.exists?
   end
 
-  # Add translation button to post actions
-  add_to_serializer(:post, :show_translation_button) do
+  add_to_serializer(:post, :show_translation_button, include_condition: -> { true }) do
     true
   end
 
