@@ -6,6 +6,7 @@ DivineRapierAiTranslator::Engine.routes.draw do
   end
 
   # User preference routes
+  get "user-preferred-language", to: "translations#get_user_preferred_language"
   post "user-preferred-language", to: "translations#set_user_preferred_language"
 
   namespace :admin do

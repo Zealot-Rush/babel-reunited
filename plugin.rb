@@ -92,14 +92,6 @@ after_initialize do
     User.class_eval do
       has_one :user_preferred_language, class_name: "DivineRapierAiTranslator::UserPreferredLanguage", dependent: :destroy
     end
-
-    def enabled_language_translator
-      self.user_preferred_language&.enabled
-    end
-
-    def preferred_language
-      self.user_preferred_language&.language
-    end
   end
 
   # Add translation methods to PostSerializer

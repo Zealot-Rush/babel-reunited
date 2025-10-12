@@ -5,7 +5,7 @@ module DivineRapierAiTranslator
     requires_plugin PLUGIN_NAME
 
     before_action :ensure_logged_in
-    before_action :find_post, except: [:set_user_preferred_language]
+    before_action :find_post, except: [:set_user_preferred_language, :get_user_preferred_language]
 
     def index
       translations = @post.post_translations.recent
@@ -42,6 +42,16 @@ module DivineRapierAiTranslator
 
       translation.destroy!
       render json: { message: "Translation deleted" }
+    end
+
+    def get_user_preferred_language
+      preferred_language = current_user.user_preferred_language
+      
+      if preferred_language
+        render json: { language: preferred_language.language }
+      else
+        render json: { language: nil }
+      end
     end
 
     def set_user_preferred_language
