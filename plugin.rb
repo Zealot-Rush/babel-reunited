@@ -113,8 +113,12 @@ after_initialize do
     true
   end
 
-  add_to_serializer(:user, :user_preferred_language, include_condition: -> { true }) do
+  add_to_serializer(:current_user, :preferred_language, include_condition: -> { true }) do
     object.user_preferred_language&.language
+  end
+
+  add_to_serializer(:current_user, :preferred_language_enabled, include_condition: -> { true }) do
+    object.user_preferred_language&.enabled
   end
 
   # Event handlers for automatic translation

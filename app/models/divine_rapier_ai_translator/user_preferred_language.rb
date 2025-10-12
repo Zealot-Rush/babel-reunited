@@ -6,6 +6,7 @@ module DivineRapierAiTranslator
 
     belongs_to :user
 
-    validates :language, presence: true, length: { maximum: 10 }
+    validates :language, length: { maximum: 10 }
+    validates :enabled, inclusion: { in: [true, false] }
   end
 end

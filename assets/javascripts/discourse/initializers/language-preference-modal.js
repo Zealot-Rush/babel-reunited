@@ -40,8 +40,6 @@ export default {
           }
 
           console.log("Language Preference Modal: Showing modal via MessageBus")
-          // Mark as shown to prevent multiple displays
-          sessionStorage.setItem("language_preference_modal_shown", "true")
 
           // Show the modal after a short delay to ensure page is loaded
           setTimeout(() => {
@@ -50,7 +48,7 @@ export default {
         })
       })
 
-       // Also check on initial page load - show modal on every page load
+       // Also check on initial page load
        api.onPageChange(async () => {
          const currentUser = api.getCurrentUser()
          console.log("Language Preference Modal: Current user", currentUser) 
@@ -61,13 +59,19 @@ export default {
            return
          }
 
-         console.log("Language Preference Modal: Checking on page change for user", currentUser.username)
+         console.log("Language Preference Modal: Checking on page change for user", currentUser.preferred_language)
+         console.log("Language Preference Modal: User preferred language:", currentUser.preferred_language)
+         console.log("Language Preference Modal: User preferred language enabled:", currentUser.preferred_language_enabled)
+         if (currentUser.preferred_language_enabled === false) {
+           console.log("Language Preference Modal: User preferred language is disabled")
+           return
+         }
 
-         // Skip API check for now - always show modal for testing
-         console.log("Language Preference Modal: Skipping API check for testing - always showing modal")
-
-         // Always show modal on page load (for testing purposes)
-         console.log("Language Preference Modal: Showing modal on every page load")
+         // Check if user already has a preferred language
+         if (currentUser.preferred_language) {
+           console.log("Language Preference Modal: User already has language preference:", currentUser.preferred_language)
+           return
+         }
 
          // Show the modal after a delay
          setTimeout(() => {
