@@ -17,3 +17,9 @@ en:
       refresh: "Refresh"
       delete: "Delete"
       translate_shortcut: "Translate post"
+      language_preference_modal:
+        title: "Set Your Preferred Language"
+        description: "To provide you with the best translation experience, please select your preferred language. This will help us automatically translate posts to your language."
+        select_language: "Choose your preferred language:"
+        save: "Save Language Preference"
+        disable: "Disable AI Translator"

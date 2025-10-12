@@ -16,5 +16,11 @@ zh_CN:
       no_translations: "暂无翻译"
       delete_translation: "删除翻译"
       confirm_delete: "确定要删除此翻译吗？"
+      language_preference_modal:
+        title: "设置您的首选语言"
+        description: "为了为您提供最佳的翻译体验，请选择您的首选语言。这将帮助我们自动将帖子翻译成您的语言。"
+        select_language: "选择您的首选语言："
+        save: "保存语言偏好"
+        skip: "暂时跳过"
   ai_translator:
     title: "AI翻译器"

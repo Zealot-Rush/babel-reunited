@@ -16,8 +16,9 @@ end
 
 require_relative "lib/divine_rapier_ai_translator/engine"
 
-# Load PostTranslation model BEFORE after_initialize
+# Load models BEFORE after_initialize
 require_relative "app/models/divine_rapier_ai_translator/post_translation"
+require_relative "app/models/divine_rapier_ai_translator/user_preferred_language"
 
 after_initialize do
   # Load other required files
@@ -87,6 +88,20 @@ after_initialize do
     end
   end
 
+  reloadable_patch do
+    User.class_eval do
+      has_one :user_preferred_language, class_name: "DivineRapierAiTranslator::UserPreferredLanguage", dependent: :destroy
+    end
+
+    def enabled_language_translator
+      self.user_preferred_language&.enabled
+    end
+
+    def preferred_language
+      self.user_preferred_language&.language
+    end
+  end
+
   # Add translation methods to PostSerializer
   add_to_serializer(:post, :available_translations, include_condition: -> { true }) do
     object.available_translations
@@ -104,6 +119,10 @@ after_initialize do
 
   add_to_serializer(:post, :show_translation_button, include_condition: -> { true }) do
     true
+  end
+
+  add_to_serializer(:user, :user_preferred_language, include_condition: -> { true }) do
+    object.user_preferred_language&.language
   end
 
   # Event handlers for automatic translation
@@ -131,6 +150,18 @@ after_initialize do
 
   on(:post_destroyed) do |post|
     # Translations will be automatically deleted due to dependent: :destroy
+  end
+
+  # User login event handler for language preference prompt
+  on(:user_logged_in) do |user|
+    next unless SiteSetting.divine_rapier_ai_translator_enabled
+    next if user.user_preferred_language.present?
+    
+    # Use MessageBus to trigger frontend modal display
+    MessageBus.publish("/language-preference-prompt/#{user.id}", {
+      user_id: user.id,
+      username: user.username
+    })
   end
 
   # Add admin route

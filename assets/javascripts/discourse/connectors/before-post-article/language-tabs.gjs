@@ -4,6 +4,7 @@ import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { htmlSafe } from "@ember/template";
+import { service } from "@ember/service";
 
 /**
  * Simple language tabs connector component
@@ -11,6 +12,7 @@ import { htmlSafe } from "@ember/template";
  */
 export default class LanguageTabsConnector extends Component {
   @tracked currentLanguage = "original";
+  @service currentUser;
 
   // 获取按钮样式 - 使用箭头函数保持this上下文
   getButtonStyle = (languageCode) => {
@@ -29,10 +31,11 @@ export default class LanguageTabsConnector extends Component {
 
   constructor() {
     super(...arguments);
-    // eslint-disable-next-line no-console
+    console.log("🔍 DEBUG: currentUser:", this.currentUser);
     console.log("🚀 LanguageTabsConnector constructor called!");
-    // eslint-disable-next-line no-console
     console.log("📋 Available args:", this.args);
+    console.log("🔍 DEBUG: enabled:", this.enabled);
+    console.log("🔍 DEBUG: language:", this.language);
   }
 
   get post() {
@@ -86,11 +89,16 @@ export default class LanguageTabsConnector extends Component {
       (t) => t.post_translation?.language === this.currentLanguage
     );
 
-    return (
-      translation?.post_translation?.translated_content ||
-      this.post?.cooked ||
-      ""
-    );
+    const translatedContent = translation?.post_translation?.translated_content || "";
+    
+    // 将换行符转换为HTML换行标签
+    if (translatedContent) {
+      return translatedContent
+        .replace(/\n\n/g, '<br><br>')  // 先处理双换行（段落分隔）
+        .replace(/\n/g, '<br>');      // 再处理单换行
+    }
+
+    return this.post?.cooked || "";
   }
 
   // 获取当前语言名称

@@ -112,7 +112,18 @@ module DivineRapierAiTranslator
       if preserve_formatting
         <<~PROMPT
           Translate the following text to #{target_language}. 
-          Preserve all markdown formatting, HTML tags, and Discourse-specific formatting.
+          
+          CRITICAL FORMATTING REQUIREMENTS:
+          - Preserve ALL line breaks exactly as they appear
+          - Keep ALL empty lines between paragraphs
+          - Maintain ALL whitespace and indentation
+          - Preserve markdown formatting (**, *, _, etc.)
+          - Keep HTML tags if present
+          - Do NOT merge paragraphs together
+          - Do NOT remove empty lines
+          
+          The output should have the EXACT same structure as the input, only with translated text.
+          
           If the text is already in #{target_language}, return the original text unchanged.
           Only return the translated text, no explanations or additional content.
           

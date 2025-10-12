@@ -22,6 +22,8 @@ export default {
         "post-content-cooked-html",
         class extends LanguageTabsConnector {
           static shouldRender(args) {
+            console.log("🔍 DEBUG: shouldRender called with args:", args);
+
             // 只有当帖子有翻译数据时才替换内容
             const hasTranslationData =
               args.post?.post_translations &&

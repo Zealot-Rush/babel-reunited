@@ -646,3 +646,236 @@
   transform: translateY(-1px);
 }
 
+/* Language Preference Modal Styles */
+
+.language-preference-modal {
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: var(--primary-low);
+    border-top: 1px solid var(--primary-low-mid);
+  }
+
+  .controls {
+    margin-top: 1.5rem;
+  }
+
+  .controls label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .combo-box {
+    width: 100%;
+  }
+
+  .combo-box .combo-box-header {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--primary-low-mid);
+    border-radius: 8px;
+    background: var(--secondary);
+    transition: all 0.2s ease;
+  }
+
+  .combo-box .combo-box-header:hover {
+    border-color: var(--primary-medium);
+  }
+
+  .combo-box .combo-box-header:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  }
+
+  .combo-box .combo-box-content {
+    border: 2px solid var(--primary-low-mid);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    background: var(--secondary);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .combo-box .combo-box-row {
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .combo-box .combo-box-row:hover {
+    background: var(--primary-low);
+  }
+
+  .combo-box .combo-box-row.selected {
+    background: var(--primary);
+    color: var(--secondary);
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-flat {
+    background: transparent;
+    border: 1px solid var(--primary-low-mid);
+    color: var(--primary-medium);
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-flat:hover {
+    background: var(--primary-low);
+    border-color: var(--primary-medium);
+    color: var(--primary);
+  }
+
+  p {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: var(--primary-medium);
+  }
+}
+
+/* Language Preference Modal Animation */
+.language-preference-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive Design for Modal */
+@media (max-width: 768px) {
+  .language-preference-modal {
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn-primary,
+    .btn-flat {
+      width: 100%;
+    }
+  }
+}
+
+/* Dark Mode Support for Modal */
+@media (prefers-color-scheme: dark) {
+  .language-preference-modal {
+    .modal-footer {
+      background: var(--primary-low-mid);
+      border-top-color: var(--primary-low);
+    }
+
+    .combo-box .combo-box-header,
+    .combo-box .combo-box-content {
+      border-color: var(--primary-low);
+    }
+
+    .combo-box .combo-box-header:hover {
+      border-color: var(--primary-medium);
+    }
+
+    .combo-box .combo-box-header:focus-within {
+      border-color: var(--primary);
+    }
+  }
+}
+
+/* Language Selection Buttons */
+.language-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  
+  .btn-language {
+    min-width: 120px;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 2px solid var(--primary-low-mid);
+    background: var(--secondary);
+    color: var(--primary);
+    
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      border-color: var(--primary);
+      background: var(--primary-low);
+    }
+    
+    &:active {
+      transform: translateY(-1px);
+    }
+    
+    &.btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--secondary);
+      
+      &:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+      }
+    }
+  }
+}
+
+/* Responsive Language Buttons */
+@media (max-width: 768px) {
+  .language-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    
+    .btn-language {
+      width: 100%;
+      min-width: auto;
+    }
+  }
+}
+
