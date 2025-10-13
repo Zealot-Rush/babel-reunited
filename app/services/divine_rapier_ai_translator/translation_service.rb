@@ -7,9 +7,10 @@ module DivineRapierAiTranslator
   class TranslationService
     include Service::Base
 
-    def initialize(post:, target_language:)
+    def initialize(post:, target_language:, force_update: false)
       @post = post
       @target_language = target_language
+      @force_update = force_update
       super()
     end
 
@@ -17,9 +18,9 @@ module DivineRapierAiTranslator
       return context.fail(error: "Post not found") if @post.blank?
       return context.fail(error: "Target language not specified") if @target_language.blank?
 
-      # Check if translation already exists
+      # Check if translation already exists (unless force update)
       existing_translation = PostTranslation.find_translation(@post.id, @target_language)
-      if existing_translation.present?
+      if existing_translation.present? && !@force_update
         context[:translation] = existing_translation
         return context
       end
@@ -32,8 +33,8 @@ module DivineRapierAiTranslator
 
       return context.fail(error: translation_result[:error]) if translation_result[:error]
 
-      # Save translation
-      translation = create_translation(translation_result)
+      # Save or update translation
+      translation = create_or_update_translation(translation_result, existing_translation)
       context[:translation] = translation
       context[:ai_response] = translation_result # Add AI response to context for logging
       context
@@ -85,6 +86,27 @@ module DivineRapierAiTranslator
     rescue => e
       Rails.logger.error("OpenAI API error: #{e.message}")
       { error: "Translation service temporarily unavailable" }
+    end
+
+    def create_or_update_translation(translation_result, existing_translation)
+      if existing_translation.present?
+        # Update existing translation
+        existing_translation.update!(
+          translated_content: translation_result[:translated_text],
+          source_language: translation_result[:source_language],
+          translation_provider: "openai",
+          metadata: {
+            confidence: translation_result[:confidence],
+            provider_info: translation_result[:provider_info],
+            translated_at: Time.current,
+            updated_at: Time.current,
+          },
+        )
+        existing_translation
+      else
+        # Create new translation
+        create_translation(translation_result)
+      end
     end
 
     def create_translation(translation_result)

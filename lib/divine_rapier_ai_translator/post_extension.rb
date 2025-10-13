@@ -5,15 +5,16 @@ module DivineRapierAiTranslator
     extend ActiveSupport::Concern
 
     included do
-      has_many :post_translations, 
+      has_many :post_translations,
                class_name: "DivineRapierAiTranslator::PostTranslation",
                dependent: :destroy
     end
 
-    def translate_to_language(target_language)
+    def translate_to_language(target_language, force_update: false)
       DivineRapierAiTranslator::TranslationService.new(
         post: self,
-        target_language: target_language
+        target_language: target_language,
+        force_update: force_update,
       ).call
     end
 
@@ -29,16 +30,17 @@ module DivineRapierAiTranslator
       post_translations.pluck(:language)
     end
 
-    def enqueue_translation_jobs(target_languages)
+    def enqueue_translation_jobs(target_languages, force_update: false)
       return if target_languages.blank?
 
       target_languages.each do |language|
-        next if has_translation?(language)
+        next if !force_update && has_translation?(language)
 
         Jobs.enqueue(
           :translate_post,
           post_id: id,
-          target_language: language
+          target_language: language,
+          force_update: force_update,
         )
       end
     end
@@ -46,11 +48,7 @@ module DivineRapierAiTranslator
     def enqueue_batch_translation(target_languages)
       return if target_languages.blank?
 
-      Jobs.enqueue(
-        :batch_translate_posts,
-        post_ids: [id],
-        target_languages: target_languages
-      )
+      Jobs.enqueue(:batch_translate_posts, post_ids: [id], target_languages: target_languages)
     end
   end
 end

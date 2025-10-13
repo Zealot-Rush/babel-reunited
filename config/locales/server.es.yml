@@ -1,4 +1,10 @@
 es:
+  admin:
+    site_settings:
+      categories:
+        divine_rapier_ai_translator: "Traductor IA"
+  divine_rapier_ai_translator:
+    title: "Traductor IA"
   site_settings:
     divine_rapier_ai_translator_enabled: "Habilitar plugin Traductor IA"
     divine_rapier_ai_translator_model: "Modelo OpenAI a usar para traducción"

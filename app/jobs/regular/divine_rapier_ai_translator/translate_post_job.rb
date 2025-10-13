@@ -4,6 +4,7 @@ class DivineRapierAiTranslatorTranslatePostJob < ::Jobs::Base
   def execute(args)
     post_id = args[:post_id]
     target_language = args[:target_language]
+    force_update = args[:force_update] || false
     start_time = Time.current
 
     return if post_id.blank? || target_language.blank?
@@ -13,7 +14,7 @@ class DivineRapierAiTranslatorTranslatePostJob < ::Jobs::Base
       DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
         post_id: post_id,
         target_language: target_language,
-        reason: "post_not_found"
+        reason: "post_not_found",
       )
       return
     end
@@ -23,18 +24,19 @@ class DivineRapierAiTranslatorTranslatePostJob < ::Jobs::Base
       DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
         post_id: post_id,
         target_language: target_language,
-        reason: "post_deleted_or_hidden"
+        reason: "post_deleted_or_hidden",
       )
       return
     end
 
-    # Check if translation already exists
-    existing_translation = DivineRapierAiTranslator::PostTranslation.find_translation(post_id, target_language)
-    if existing_translation.present?
+    # Check if translation already exists (unless force update)
+    existing_translation =
+      DivineRapierAiTranslator::PostTranslation.find_translation(post_id, target_language)
+    if existing_translation.present? && !force_update
       DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
         post_id: post_id,
         target_language: target_language,
-        reason: "translation_already_exists"
+        reason: "translation_already_exists",
       )
       return
     end
@@ -43,14 +45,17 @@ class DivineRapierAiTranslatorTranslatePostJob < ::Jobs::Base
     DivineRapierAiTranslator::TranslationLogger.log_translation_start(
       post_id: post_id,
       target_language: target_language,
-      content_length: post.raw&.length || 0
+      content_length: post.raw&.length || 0,
+      force_update: force_update,
     )
 
     # Perform translation
-    result = DivineRapierAiTranslator::TranslationService.new(
-      post: post,
-      target_language: target_language
-    ).call
+    result =
+      DivineRapierAiTranslator::TranslationService.new(
+        post: post,
+        target_language: target_language,
+        force_update: force_update,
+      ).call
 
     processing_time = ((Time.current - start_time) * 1000).round(2)
 
@@ -59,20 +64,21 @@ class DivineRapierAiTranslatorTranslatePostJob < ::Jobs::Base
         post_id: post_id,
         target_language: target_language,
         error: StandardError.new(result.error),
-        processing_time: processing_time
+        processing_time: processing_time,
       )
       Rails.logger.error("Translation failed for post #{post_id}: #{result.error}")
     else
       # Log successful translation
       translation = result.translation
       ai_response = result.ai_response || {}
-      
+
       DivineRapierAiTranslator::TranslationLogger.log_translation_success(
         post_id: post_id,
         target_language: target_language,
         translation_id: translation&.id,
         ai_response: ai_response,
-        processing_time: processing_time
+        processing_time: processing_time,
+        force_update: force_update,
       )
     end
   end

@@ -39,14 +39,14 @@ after_initialize do
   # Extend Post model with translation functionality
   reloadable_patch do
     Post.class_eval do
-      has_many :post_translations, 
+      has_many :post_translations,
                class_name: "DivineRapierAiTranslator::PostTranslation",
                dependent: :destroy
 
       def translate_to_language(target_language)
         DivineRapierAiTranslator::TranslationService.new(
           post: self,
-          target_language: target_language
+          target_language: target_language,
         ).call
       end
 
@@ -62,16 +62,17 @@ after_initialize do
         post_translations.pluck(:language)
       end
 
-      def enqueue_translation_jobs(target_languages)
+      def enqueue_translation_jobs(target_languages, force_update: false)
         return if target_languages.blank?
 
         target_languages.each do |language|
-          next if has_translation?(language)
+          next if !force_update && has_translation?(language)
 
           Jobs.enqueue(
             DivineRapierAiTranslatorTranslatePostJob,
             post_id: id,
-            target_language: language
+            target_language: language,
+            force_update: force_update,
           )
         end
       end
@@ -82,7 +83,7 @@ after_initialize do
         Jobs.enqueue(
           DivineRapierAiTranslatorBatchTranslatePostsJob,
           post_ids: [id],
-          target_languages: target_languages
+          target_languages: target_languages,
         )
       end
     end
@@ -90,7 +91,9 @@ after_initialize do
 
   reloadable_patch do
     User.class_eval do
-      has_one :user_preferred_language, class_name: "DivineRapierAiTranslator::UserPreferredLanguage", dependent: :destroy
+      has_one :user_preferred_language,
+              class_name: "DivineRapierAiTranslator::UserPreferredLanguage",
+              dependent: :destroy
     end
   end
 
@@ -100,18 +103,20 @@ after_initialize do
   end
 
   add_to_serializer(:post, :post_translations, include_condition: -> { true }) do
-    object.post_translations.recent.limit(5).map do |translation|
-      DivineRapierAiTranslator::PostTranslationSerializer.new(translation).as_json
-    end
+    object
+      .post_translations
+      .recent
+      .limit(5)
+      .map do |translation|
+        DivineRapierAiTranslator::PostTranslationSerializer.new(translation).as_json
+      end
   end
 
   add_to_serializer(:post, :show_translation_widget, include_condition: -> { true }) do
     object.post_translations.exists?
   end
 
-  add_to_serializer(:post, :show_translation_button, include_condition: -> { true }) do
-    true
-  end
+  add_to_serializer(:post, :show_translation_button, include_condition: -> { true }) { true }
 
   add_to_serializer(:current_user, :preferred_language, include_condition: -> { true }) do
     object.user_preferred_language&.language
@@ -139,9 +144,7 @@ after_initialize do
 
     # Re-translate existing translations when post is edited
     existing_languages = post.available_translations
-    if existing_languages.any?
-      post.enqueue_translation_jobs(existing_languages)
-    end
+    post.enqueue_translation_jobs(existing_languages, force_update: true) if existing_languages.any?
   end
 
   on(:post_destroyed) do |post|
@@ -152,16 +155,16 @@ after_initialize do
   on(:user_logged_in) do |user|
     next unless SiteSetting.divine_rapier_ai_translator_enabled
     next if user.user_preferred_language.present?
-    
+
     # Use MessageBus to trigger frontend modal display
-    MessageBus.publish("/language-preference-prompt/#{user.id}", {
-      user_id: user.id,
-      username: user.username
-    })
+    MessageBus.publish(
+      "/language-preference-prompt/#{user.id}",
+      { user_id: user.id, username: user.username },
+    )
   end
 
   # Add admin route
-  add_admin_route "ai_translator.title", "ai-translator"
+  add_admin_route "admin.site_settings.categories.divine_rapier_ai_translator", "ai-translator", use_new_show_route: true
 
   # Register frontend widgets and components
   register_asset "stylesheets/translation-widgets.scss"

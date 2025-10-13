@@ -1,4 +1,10 @@
 zh_CN:
+  admin:
+    site_settings:
+      categories:
+        divine_rapier_ai_translator: "AI翻译器"
+  divine_rapier_ai_translator:
+    title: "AI翻译器"
   site_settings:
     divine_rapier_ai_translator_enabled: "启用AI翻译器插件"
     divine_rapier_ai_translator_model: "用于翻译的OpenAI模型"
