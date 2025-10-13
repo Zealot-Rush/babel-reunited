@@ -28,7 +28,7 @@ divine_rapier_ai_translator:
   divine_rapier_ai_translator_max_content_length:
     default: 4000
     min: 100
-    max: 10000
+    max: 100000
 
   divine_rapier_ai_translator_preserve_formatting:
     default: true

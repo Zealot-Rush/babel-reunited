@@ -137,11 +137,8 @@ export default class LanguageTabsConnector extends Component {
 
     const translatedContent = translation?.post_translation?.translated_content || "";
     
-    // 将换行符转换为HTML换行标签
     if (translatedContent) {
-      return translatedContent
-        .replace(/\n\n/g, '<br><br>')  // 先处理双换行（段落分隔）
-        .replace(/\n/g, '<br>');      // 再处理单换行
+      return translatedContent;
     }
 
     return this.post?.cooked || "";
