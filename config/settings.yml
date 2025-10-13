@@ -30,6 +30,12 @@ divine_rapier_ai_translator:
     min: 100
     max: 100000
 
+  divine_rapier_ai_translator_max_tokens:
+    default: 16000
+    min: 100
+    max: 32000
+    client: false
+
   divine_rapier_ai_translator_preserve_formatting:
     default: true
     client: true

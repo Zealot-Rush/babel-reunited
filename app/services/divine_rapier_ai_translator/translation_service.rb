@@ -183,7 +183,7 @@ module DivineRapierAiTranslator
       request_body = {
         model: SiteSetting.divine_rapier_ai_translator_model,
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 2000,
+        max_tokens: SiteSetting.divine_rapier_ai_translator_max_tokens,
         temperature: 0.3,
       }
 
