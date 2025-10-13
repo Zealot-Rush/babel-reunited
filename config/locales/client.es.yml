@@ -23,6 +23,7 @@ es:
         save: "Guardar preferencia de idioma"
         skip: "Omitir por ahora"
         disable: "Desactivar traducción"
+        disable_description: "¿No quieres traducciones automáticas?"
         language_english: "English"
         language_chinese: "中文"
         language_spanish: "Español"

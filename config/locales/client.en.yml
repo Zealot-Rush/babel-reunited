@@ -24,6 +24,7 @@ en:
         save: "Save Language Preference"
         skip: "Skip for now"
         disable: "Disable Translation"
+        disable_description: "Don't want automatic translations?"
         language_english: "English"
         language_chinese: "中文"
         language_spanish: "Español"

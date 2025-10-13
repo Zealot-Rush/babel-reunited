@@ -23,6 +23,7 @@ de:
         save: "Spracheinstellung speichern"
         skip: "Jetzt überspringen"
         disable: "Übersetzung deaktivieren"
+        disable_description: "Keine automatischen Übersetzungen gewünscht?"
         language_english: "English"
         language_chinese: "中文"
         language_spanish: "Español"

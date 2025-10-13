@@ -23,6 +23,7 @@ zh_CN:
         save: "保存语言偏好"
         skip: "暂时跳过"
         disable: "禁用翻译"
+        disable_description: "不想要自动翻译？"
         language_english: "English"
         language_chinese: "中文"
         language_spanish: "Español"

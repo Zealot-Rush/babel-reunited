@@ -108,13 +108,17 @@ export default class LanguagePreferenceModal extends Component {
         </div>
         
         <div class="disable-section">
-          <DButton
-            @action={{this.disableTranslation}}
-            @disabled={{this.saving}}
-            @label="divine_rapier_ai_translator.language_preference_modal.disable"
-            @icon="times"
-            class="btn-danger"
-          />
+          <div class="disable-text">
+            {{i18n "divine_rapier_ai_translator.language_preference_modal.disable_description"}}
+          </div>
+          <button 
+            class="disable-btn" 
+            disabled={{this.saving}}
+            {{on "click" this.disableTranslation}}
+          >
+            <span class="disable-icon">🚫</span>
+            <span class="disable-label">{{i18n "divine_rapier_ai_translator.language_preference_modal.disable"}}</span>
+          </button>
         </div>
       </:body>
     </DModal>
