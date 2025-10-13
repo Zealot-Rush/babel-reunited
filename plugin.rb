@@ -69,7 +69,7 @@ after_initialize do
           next if !force_update && has_translation?(language)
 
           Jobs.enqueue(
-            DivineRapierAiTranslatorTranslatePostJob,
+            Jobs::DivineRapierAiTranslator::TranslatePostJob,
             post_id: id,
             target_language: language,
             force_update: force_update,
@@ -81,7 +81,7 @@ after_initialize do
         return if target_languages.blank?
 
         Jobs.enqueue(
-          DivineRapierAiTranslatorBatchTranslatePostsJob,
+          Jobs::DivineRapierAiTranslator::BatchTranslatePostsJob,
           post_ids: [id],
           target_languages: target_languages,
         )

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DivineRapierAiTranslatorBatchTranslatePostsJob < ::Jobs::Base
+class Jobs::DivineRapierAiTranslator::BatchTranslatePostsJob < ::Jobs::Base
     def execute(args)
       post_ids = args[:post_ids]
       target_languages = args[:target_languages] || []
@@ -13,7 +13,7 @@ class DivineRapierAiTranslatorBatchTranslatePostsJob < ::Jobs::Base
           delay = rand(1..5).seconds
           Jobs.enqueue_in(
             delay,
-            DivineRapierAiTranslatorTranslatePostJob,
+            Jobs::DivineRapierAiTranslator::TranslatePostJob,
             post_id: post_id,
             target_language: language
           )

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DivineRapierAiTranslatorTranslatePostJob < ::Jobs::Base
+class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
   def execute(args)
     post_id = args[:post_id]
     target_language = args[:target_language]
