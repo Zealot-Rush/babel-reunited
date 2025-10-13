@@ -16,5 +16,15 @@ es:
       no_translations: "No hay traducciones disponibles"
       delete_translation: "Eliminar traducción"
       confirm_delete: "¿Estás seguro de que quieres eliminar esta traducción?"
+      language_preference_modal:
+        title: "Establece tu idioma preferido"
+        description: "Para brindarte la mejor experiencia de traducción, por favor selecciona tu idioma preferido. Esto nos ayudará a traducir automáticamente las publicaciones a tu idioma."
+        select_language: "Elige tu idioma preferido:"
+        save: "Guardar preferencia de idioma"
+        skip: "Omitir por ahora"
+        disable: "Desactivar traducción"
+        language_english: "English"
+        language_chinese: "中文"
+        language_spanish: "Español"
   ai_translator:
     title: "Traductor IA"

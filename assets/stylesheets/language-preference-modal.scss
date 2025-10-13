@@ -1,0 +1,115 @@
+.language-preference-modal {
+  .language-buttons {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .language-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 20px;
+    border: 2px solid #e1e5e9;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2c3e50;
+
+    &:hover {
+      border-color: #0078d4;
+      background: #f8f9fa;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 120, 212, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 120, 212, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .flag {
+      font-size: 24px;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+
+    .language-name {
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+  }
+
+  .language-btn-en {
+    &:hover {
+      border-color: #0078d4;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+    }
+  }
+
+  .language-btn-zh {
+    &:hover {
+      border-color: #d32f2f;
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffebee 100%);
+    }
+  }
+
+  .language-btn-es {
+    &:hover {
+      border-color: #f57c00;
+      background: linear-gradient(135deg, #f8f9fa 0%, #fff3e0 100%);
+    }
+  }
+
+  .disable-section {
+    margin-top: 24px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #e1e5e9;
+
+    .btn-danger {
+      background: #dc3545;
+      border-color: #dc3545;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+
+      &:hover {
+        background: #c82333;
+        border-color: #bd2130;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .modal-body {
+    text-align: center;
+    
+    p {
+      margin-bottom: 24px;
+      color: #6c757d;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+  }
+}

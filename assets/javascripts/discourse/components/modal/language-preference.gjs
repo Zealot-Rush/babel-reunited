@@ -4,49 +4,52 @@ import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DModal from "discourse/components/d-modal";
 import DButton from "discourse/components/d-button";
-import ComboBox from "select-kit/components/combo-box";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { i18n } from "discourse-i18n";
 import { fn } from "@ember/helper";
+import { on } from "@ember/modifier";
 
 export default class LanguagePreferenceModal extends Component {
   @service currentUser;
   @service modal;
   
-  @tracked selectedLanguage = null;
   @tracked saving = false;
 
-  get availableLanguages() {
-    return [
-      { name: "English", value: "en" },
-      { name: "中文", value: "zh" },
-      { name: "日本語", value: "ja" },
-      { name: "한국어", value: "ko" },
-      { name: "Español", value: "es" },
-      { name: "Français", value: "fr" },
-      { name: "Deutsch", value: "de" },
-      { name: "Русский", value: "ru" },
-      { name: "Português", value: "pt" },
-      { name: "Italiano", value: "it" },
-      { name: "العربية", value: "ar" },
-      { name: "हिन्दी", value: "hi" }
-    ];
-  }
-
-  get saveDisabled() {
-    return !this.selectedLanguage || this.saving;
-  }
 
   @action
-  async saveLanguage() {
+  async selectLanguage(language) {
     this.saving = true;
     
     try {
       await ajax("/ai-translator/user-preferred-language", {
         type: "POST",
         data: {
-          language: this.selectedLanguage
+          language: language
+        }
+      });
+      
+      // 标记为已显示
+      localStorage.setItem("language_preference_tip_shown", "true");
+      
+      this.modal.close();
+
+    } catch (error) {
+      popupAjaxError(error);
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  @action
+  async disableTranslation() {
+    this.saving = true;
+    
+    try {
+      await ajax("/ai-translator/user-preferred-language", {
+        type: "POST",
+        data: {
+          enabled: false
         }
       });
       
@@ -77,34 +80,43 @@ export default class LanguagePreferenceModal extends Component {
       <:body>
         <p>{{i18n "divine_rapier_ai_translator.language_preference_modal.description"}}</p>
         
-        <div class="controls">
-          <label for="language-select">
-            {{i18n "divine_rapier_ai_translator.language_preference_modal.select_language"}}
-          </label>
-          <ComboBox
-            @valueProperty="value"
-            @content={{this.availableLanguages}}
-            @value={{this.selectedLanguage}}
-            @id="language-select"
-            @onChange={{fn (mut this.selectedLanguage)}}
+        <div class="language-buttons">
+          <button 
+            class="language-btn language-btn-en" 
+            disabled={{this.saving}}
+            {{on "click" (fn this.selectLanguage "en")}}
+          >
+            <span class="flag">🇺🇸</span>
+            <span class="language-name">English</span>
+          </button>
+          <button 
+            class="language-btn language-btn-zh" 
+            disabled={{this.saving}}
+            {{on "click" (fn this.selectLanguage "zh")}}
+          >
+            <span class="flag">🇨🇳</span>
+            <span class="language-name">中文</span>
+          </button>
+          <button 
+            class="language-btn language-btn-es" 
+            disabled={{this.saving}}
+            {{on "click" (fn this.selectLanguage "es")}}
+          >
+            <span class="flag">🇪🇸</span>
+            <span class="language-name">Español</span>
+          </button>
+        </div>
+        
+        <div class="disable-section">
+          <DButton
+            @action={{this.disableTranslation}}
+            @disabled={{this.saving}}
+            @label="divine_rapier_ai_translator.language_preference_modal.disable"
+            @icon="times"
+            class="btn-danger"
           />
         </div>
       </:body>
-      
-      <:footer>
-        <DButton
-          @action={{this.saveLanguage}}
-          @disabled={{this.saveDisabled}}
-          @label="divine_rapier_ai_translator.language_preference_modal.save"
-          @icon="check"
-          class="btn-primary"
-        />
-        <DButton
-          @action={{this.skip}}
-          @label="divine_rapier_ai_translator.language_preference_modal.skip"
-          class="btn-flat"
-        />
-      </:footer>
     </DModal>
   </template>
 }

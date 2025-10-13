@@ -16,5 +16,15 @@ de:
       no_translations: "Keine Übersetzungen verfügbar"
       delete_translation: "Übersetzung löschen"
       confirm_delete: "Sind Sie sicher, dass Sie diese Übersetzung löschen möchten?"
+      language_preference_modal:
+        title: "Ihre bevorzugte Sprache festlegen"
+        description: "Um Ihnen die beste Übersetzungserfahrung zu bieten, wählen Sie bitte Ihre bevorzugte Sprache. Dies hilft uns, Beiträge automatisch in Ihre Sprache zu übersetzen."
+        select_language: "Wählen Sie Ihre bevorzugte Sprache:"
+        save: "Spracheinstellung speichern"
+        skip: "Jetzt überspringen"
+        disable: "Übersetzung deaktivieren"
+        language_english: "English"
+        language_chinese: "中文"
+        language_spanish: "Español"
   ai_translator:
     title: "KI-Übersetzer"

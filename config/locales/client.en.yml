@@ -23,3 +23,7 @@ en:
         select_language: "Choose your preferred language:"
         save: "Save Language Preference"
         skip: "Skip for now"
+        disable: "Disable Translation"
+        language_english: "English"
+        language_chinese: "中文"
+        language_spanish: "Español"
