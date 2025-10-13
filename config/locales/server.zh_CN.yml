@@ -13,4 +13,5 @@ zh_CN:
     divine_rapier_ai_translator_openai_base_url: "OpenAI基础URL（留空使用默认OpenAI API，或输入自定义OpenAI兼容API URL）"
     divine_rapier_ai_translator_rate_limit_per_minute: "每分钟速率限制"
     divine_rapier_ai_translator_max_content_length: "翻译的最大内容长度"
+    divine_rapier_ai_translator_max_tokens: "AI响应的最大token数"
     divine_rapier_ai_translator_preserve_formatting: "保留markdown/HTML格式"

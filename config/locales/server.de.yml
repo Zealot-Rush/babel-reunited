@@ -13,4 +13,5 @@ de:
     divine_rapier_ai_translator_openai_base_url: "OpenAI Basis-URL (leer lassen für Standard OpenAI API, oder benutzerdefinierte OpenAI-kompatible API URL eingeben)"
     divine_rapier_ai_translator_rate_limit_per_minute: "Rate-Limit pro Minute"
     divine_rapier_ai_translator_max_content_length: "Maximale Inhaltslänge für Übersetzung"
+    divine_rapier_ai_translator_max_tokens: "Maximale Token für KI-Antwort"
     divine_rapier_ai_translator_preserve_formatting: "Markdown/HTML-Formatierung beibehalten"
