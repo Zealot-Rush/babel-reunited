@@ -48,9 +48,15 @@ module DivineRapierAiTranslator
       preferred_language = current_user.user_preferred_language
       
       if preferred_language
-        render json: { language: preferred_language.language }
+        render json: { 
+          language: preferred_language.language,
+          enabled: preferred_language.enabled
+        }
       else
-        render json: { language: nil }
+        render json: { 
+          language: nil,
+          enabled: true  # Default to enabled if no preference set
+        }
       end
     end
 

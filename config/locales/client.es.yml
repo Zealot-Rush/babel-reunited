@@ -6,3 +6,5 @@ es:
         ai_translation_language_description: "Elige tu idioma preferido para las traducciones automáticas de publicaciones. Las publicaciones se mostrarán automáticamente en este idioma cuando esté disponible."
         current_language: "Idioma Actual"
         debug_info: "Información de Depuración"
+        enable_ai_translation: "Habilitar Traducción IA"
+        enabled: "Habilitado"

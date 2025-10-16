@@ -14,6 +14,11 @@ export default class LanguageTabsConnector extends Component {
   @tracked currentLanguage = "original";
   @service currentUser;
 
+  // 检查用户是否禁用了AI翻译功能
+  get isAiTranslationDisabled() {
+    return this.currentUser?.preferred_language_enabled === false;
+  }
+
   // 获取按钮样式 - 使用箭头函数保持this上下文
   getButtonStyle = (languageCode) => {
     const baseStyle =
@@ -44,12 +49,21 @@ export default class LanguageTabsConnector extends Component {
   /**
    * 初始化用户的偏好语言选择
    * 如果用户设置了偏好语言且该语言在可用翻译中，则自动选择
+   * 如果用户禁用了AI翻译功能，则不进行自动选择
    */
   initializePreferredLanguage() {
     console.log("🔍 DEBUG: initializePreferredLanguage called");
     console.log("🔍 DEBUG: currentUser:", this.currentUser);
     console.log("🔍 DEBUG: preferred_language:", this.currentUser?.preferred_language);
     console.log("🔍 DEBUG: preferred_language_enabled:", this.currentUser?.preferred_language_enabled);
+    console.log("🔍 DEBUG: isAiTranslationDisabled:", this.isAiTranslationDisabled);
+    
+    // 如果用户禁用了AI翻译功能，直接使用原始内容
+    if (this.isAiTranslationDisabled) {
+      console.log("🚫 User has disabled AI translation, using original content");
+      this.currentLanguage = "original";
+      return;
+    }
     
     if (!this.currentUser?.preferred_language) {
       console.log("🔍 DEBUG: No user preferred language set, using original");
@@ -177,24 +191,26 @@ export default class LanguageTabsConnector extends Component {
   }
 
   <template>
-    {{! 语言切换标签 }}
-    <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; margin-left: 12px;">
-      <button
-        style={{this.getButtonStyle "original"}}
-        {{on "click" (fn this.switchLanguage "original")}}
-      >
-        Raw
-      </button>
-
-      {{#each this.languageNames as |langInfo|}}
+    {{! 只有在用户启用AI翻译功能时才显示语言切换标签 }}
+    {{#unless this.isAiTranslationDisabled}}
+      <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; margin-left: 12px;">
         <button
-          style={{this.getButtonStyle langInfo.code}}
-          {{on "click" (fn this.switchLanguage langInfo.code)}}
+          style={{this.getButtonStyle "original"}}
+          {{on "click" (fn this.switchLanguage "original")}}
         >
-          {{langInfo.name}}
+          Raw
         </button>
-      {{/each}}
-    </div>
+
+        {{#each this.languageNames as |langInfo|}}
+          <button
+            style={{this.getButtonStyle langInfo.code}}
+            {{on "click" (fn this.switchLanguage langInfo.code)}}
+          >
+            {{langInfo.name}}
+          </button>
+        {{/each}}
+      </div>
+    {{/unless}}
 
     {{! 替换原post内容，直接显示当前选中的内容 }}
     <div class="cooked">

@@ -6,3 +6,5 @@ zh_CN:
         ai_translation_language_description: "选择您偏好的AI翻译语言。当帖子有该语言的翻译时，将自动显示翻译版本。"
         current_language: "当前语言"
         debug_info: "调试信息"
+        enable_ai_translation: "启用AI翻译"
+        enabled: "已启用"
