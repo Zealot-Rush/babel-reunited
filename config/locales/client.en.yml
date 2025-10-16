@@ -1,33 +1,8 @@
 en:
   js:
     divine_rapier_ai_translator:
-      title: "AI Translator"
-      translate: "Translate"
-      translated: "Translated"
-      available_translations: "Available Translations"
-      original: "Original"
-      translated_content: "Translated Content"
-      original_content: "Original Content"
-      translating: "Translating..."
-      select_language: "Select Language"
-      translation_success: "Translation completed successfully"
-      translation_not_found: "Translation not found"
-      no_translations: "No translations available"
-      translated_on: "Translated on %{date}"
-      source_language: "Source language: %{language}"
-      refresh: "Refresh"
-      delete: "Delete"
-      translate_shortcut: "Translate post"
-      language_preference_modal:
-        title: "Set Your Preferred Language"
-        description: "To provide you with the best translation experience, please select your preferred language. This will help us automatically translate posts to your language."
-        select_language: "Choose your preferred language:"
-        save: "Save Language Preference"
-        skip: "Skip for now"
-        disable: "Disable Translation"
-        disable_description: "Don't want automatic translations?"
-        language_english: "English"
-        language_chinese: "中文"
-        language_spanish: "Español"
-  ai_translator:
-    title: "AI Translator"
+      preferences:
+        ai_translation_language: "AI Translation Language"
+        ai_translation_language_description: "Choose your preferred language for AI-powered post translations. Posts will automatically display in this language when available."
+        current_language: "Current Language"
+        debug_info: "Debug Info"

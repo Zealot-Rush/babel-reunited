@@ -56,23 +56,29 @@ module DivineRapierAiTranslator
 
     def set_user_preferred_language
       language = params[:language]
-      
-      if language.blank?
-        return render json: { error: "Language is required" }, status: :bad_request
-      end
-      
-      # Validate language code format
-      unless language.match?(/\A[a-z]{2}\z/)
-        return render json: { error: "Invalid language code format" }, status: :bad_request
-      end
+      enabled = params[:enabled]
       
       preferred_language = current_user.user_preferred_language || 
                           current_user.build_user_preferred_language
       
-      preferred_language.language = language
+      if language.present?
+        # Validate language code format
+        unless language.match?(/\A[a-z]{2}\z/)
+          return render json: { error: "Invalid language code format" }, status: :bad_request
+        end
+        preferred_language.language = language
+      end
+      
+      if enabled.present?
+        preferred_language.enabled = enabled
+      end
       
       if preferred_language.save
-        render json: { success: true, language: language }
+        render json: { 
+          success: true, 
+          language: preferred_language.language,
+          enabled: preferred_language.enabled
+        }
       else
         render json: { errors: preferred_language.errors.full_messages }, status: :bad_request
       end

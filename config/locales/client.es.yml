@@ -1,31 +1,8 @@
 es:
-  admin_js:
-    admin:
-      site_settings:
-        categories:
-          divine_rapier_ai_translator: "Traductor IA"
   js:
     divine_rapier_ai_translator:
-      title: "Traductor IA"
-      translate: "Traducir"
-      translating: "Traduciendo..."
-      translated: "Traducido"
-      error: "Error en la traducción"
-      select_language: "Seleccionar idioma"
-      available_translations: "Traducciones disponibles"
-      no_translations: "No hay traducciones disponibles"
-      delete_translation: "Eliminar traducción"
-      confirm_delete: "¿Estás seguro de que quieres eliminar esta traducción?"
-      language_preference_modal:
-        title: "Establece tu idioma preferido"
-        description: "Para brindarte la mejor experiencia de traducción, por favor selecciona tu idioma preferido. Esto nos ayudará a traducir automáticamente las publicaciones a tu idioma."
-        select_language: "Elige tu idioma preferido:"
-        save: "Guardar preferencia de idioma"
-        skip: "Omitir por ahora"
-        disable: "Desactivar traducción"
-        disable_description: "¿No quieres traducciones automáticas?"
-        language_english: "English"
-        language_chinese: "中文"
-        language_spanish: "Español"
-  ai_translator:
-    title: "Traductor IA"
+      preferences:
+        ai_translation_language: "Idioma de Traducción IA"
+        ai_translation_language_description: "Elige tu idioma preferido para las traducciones automáticas de publicaciones. Las publicaciones se mostrarán automáticamente en este idioma cuando esté disponible."
+        current_language: "Idioma Actual"
+        debug_info: "Información de Depuración"

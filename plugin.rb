@@ -168,6 +168,7 @@ after_initialize do
 
   # Register frontend widgets and components
   register_asset "stylesheets/translation-widgets.scss"
+  register_asset "stylesheets/preferences.scss"
   register_asset "stylesheets/language-tabs.scss"
   register_asset "stylesheets/language-preference-modal.scss"
 end

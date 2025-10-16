@@ -1,31 +1,8 @@
 zh_CN:
-  admin_js:
-    admin:
-      site_settings:
-        categories:
-          divine_rapier_ai_translator: "AI翻译器"
   js:
     divine_rapier_ai_translator:
-      title: "AI翻译器"
-      translate: "翻译"
-      translating: "翻译中..."
-      translated: "已翻译"
-      error: "翻译失败"
-      select_language: "选择语言"
-      available_translations: "可用翻译"
-      no_translations: "暂无翻译"
-      delete_translation: "删除翻译"
-      confirm_delete: "确定要删除此翻译吗？"
-      language_preference_modal:
-        title: "设置您的首选语言"
-        description: "为了为您提供最佳的翻译体验，请选择您的首选语言。这将帮助我们自动将帖子翻译成您的语言。"
-        select_language: "选择您的首选语言："
-        save: "保存语言偏好"
-        skip: "暂时跳过"
-        disable: "禁用翻译"
-        disable_description: "不想要自动翻译？"
-        language_english: "English"
-        language_chinese: "中文"
-        language_spanish: "Español"
-  ai_translator:
-    title: "AI翻译器"
+      preferences:
+        ai_translation_language: "AI翻译语言"
+        ai_translation_language_description: "选择您偏好的AI翻译语言。当帖子有该语言的翻译时，将自动显示翻译版本。"
+        current_language: "当前语言"
+        debug_info: "调试信息"
