@@ -39,3 +39,7 @@ divine_rapier_ai_translator:
   divine_rapier_ai_translator_preserve_formatting:
     default: true
     client: true
+
+  divine_rapier_ai_translator_translate_title:
+    default: true
+    client: true

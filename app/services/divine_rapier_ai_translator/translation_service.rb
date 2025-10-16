@@ -27,9 +27,12 @@ module DivineRapierAiTranslator
 
       # Prepare content for translation
       content_to_translate = prepare_content_for_translation(@post.cooked)
+      
+      # Prepare title for translation (only for first post)
+      title_to_translate = prepare_title_for_translation
 
       # Call OpenAI translation API
-      translation_result = call_openai_api(content_to_translate, @target_language)
+      translation_result = call_openai_api(content_to_translate, @target_language, title_to_translate)
 
       return context.fail(error: translation_result[:error]) if translation_result[:error]
 
@@ -48,7 +51,16 @@ module DivineRapierAiTranslator
       cooked_content
     end
 
-    def call_openai_api(content, target_language)
+    def prepare_title_for_translation
+      # Only translate title for the first post of a topic
+      return nil unless @post.post_number == 1
+      return nil if @post.topic.title.blank?
+      return nil unless SiteSetting.divine_rapier_ai_translator_translate_title
+      
+      @post.topic.title
+    end
+
+    def call_openai_api(content, target_language, title = nil)
       api_key = SiteSetting.divine_rapier_ai_translator_openai_api_key
       return { error: "OpenAI API key not configured" } if api_key.blank?
 
@@ -57,13 +69,16 @@ module DivineRapierAiTranslator
         return { error: "Rate limit exceeded. Please try again later." }
       end
 
-      # Check content length
-      if content.length > SiteSetting.divine_rapier_ai_translator_max_content_length
+      # Check content length (include title in length calculation)
+      total_length = content.length
+      total_length += title.length if title.present?
+      
+      if total_length > SiteSetting.divine_rapier_ai_translator_max_content_length
         return { error: "Content too long for translation" }
       end
 
       # Prepare the prompt for translation
-      prompt = build_translation_prompt(content, target_language)
+      prompt = build_translation_prompt(content, target_language, title)
 
       # Make API call
       response = make_openai_request(prompt, api_key)
@@ -75,6 +90,7 @@ module DivineRapierAiTranslator
 
       {
         translated_text: response[:translated_text],
+        translated_title: response[:translated_title],
         source_language: response[:source_language] || "auto",
         confidence: response[:confidence] || 0.95,
         provider_info: {
@@ -93,6 +109,7 @@ module DivineRapierAiTranslator
         # Update existing translation
         existing_translation.update!(
           translated_content: translation_result[:translated_text],
+          translated_title: translation_result[:translated_title],
           source_language: translation_result[:source_language],
           translation_provider: "openai",
           metadata: {
@@ -114,6 +131,7 @@ module DivineRapierAiTranslator
         post: @post,
         language: @target_language,
         translated_content: translation_result[:translated_text],
+        translated_title: translation_result[:translated_title],
         source_language: translation_result[:source_language],
         translation_provider: "openai",
         metadata: {
@@ -124,8 +142,25 @@ module DivineRapierAiTranslator
       )
     end
 
-    def build_translation_prompt(content, target_language)
+    def build_translation_prompt(content, target_language, title = nil)
       preserve_formatting = SiteSetting.divine_rapier_ai_translator_preserve_formatting
+      
+      if title.present?
+        # Include title in translation prompt
+        title_instruction = <<~TITLE_INSTRUCTION
+          
+          IMPORTANT: This post is the first post of a topic. Please also translate the topic title.
+          Topic title: #{title}
+          
+          Return your response in the following JSON format:
+          {
+            "translated_content": "translated HTML content here",
+            "translated_title": "translated title here"
+          }
+        TITLE_INSTRUCTION
+      else
+        title_instruction = ""
+      end
 
       if preserve_formatting
         <<~PROMPT
@@ -146,6 +181,7 @@ module DivineRapierAiTranslator
           
           If the text is already in #{target_language}, return the original HTML unchanged.
           Only return the translated HTML, no explanations or additional content.
+          #{title_instruction}
           
           HTML content to translate:
           #{content}
@@ -162,6 +198,7 @@ module DivineRapierAiTranslator
           
           If the text is already in #{target_language}, return the original HTML unchanged.
           Only return the translated HTML, no explanations or additional content.
+          #{title_instruction}
           
           HTML content to translate:
           #{content}
@@ -216,16 +253,114 @@ module DivineRapierAiTranslator
       choices = response_body.dig("choices")
       return { error: "Invalid response format" } unless choices&.any?
 
-      translated_text = choices.first.dig("message", "content")
-      return { error: "No translation in response" } if translated_text.blank?
+      response_content = choices.first.dig("message", "content")
+      return { error: "No translation in response" } if response_content.blank?
 
-      {
-        translated_text: translated_text.strip,
-        source_language: "auto",
-        confidence: 0.95,
-        model: response_body.dig("model"),
-        tokens_used: response_body.dig("usage", "total_tokens"),
-      }
+      cleaned_content = response_content.strip
+      
+      # Try multiple approaches to parse JSON
+      parsed_result = try_parse_json_response(cleaned_content)
+      
+      if parsed_result
+        parsed_result.merge({
+          source_language: "auto",
+          confidence: 0.95,
+          model: response_body.dig("model"),
+          tokens_used: response_body.dig("usage", "total_tokens"),
+        })
+      else
+        # Fallback to plain text response
+        {
+          translated_text: cleaned_content,
+          translated_title: nil,
+          source_language: "auto",
+          confidence: 0.95,
+          model: response_body.dig("model"),
+          tokens_used: response_body.dig("usage", "total_tokens"),
+        }
+      end
+    end
+
+    def try_parse_json_response(content)
+      # Method 1: Try to find complete JSON object
+      json_match = content.match(/\{.*?\}/m)
+      if json_match
+        begin
+          parsed = JSON.parse(json_match[0])
+          if parsed["translated_content"].present?
+            Rails.logger.info("Successfully parsed JSON response with translated_content")
+            return {
+              translated_text: parsed["translated_content"],
+              translated_title: parsed["translated_title"]
+            }
+          end
+        rescue JSON::ParserError => e
+          Rails.logger.warn("JSON parsing failed: #{e.message}")
+        end
+      end
+
+      # Method 2: Try to find JSON that starts with translated_content
+      if content.include?('"translated_content"')
+        begin
+          # Try to extract JSON starting from translated_content
+          json_start = content.index('{')
+          if json_start
+            json_part = content[json_start..-1]
+            # Try to find the end of the JSON
+            brace_count = 0
+            json_end = -1
+            json_part.chars.each_with_index do |char, index|
+              if char == '{'
+                brace_count += 1
+              elsif char == '}'
+                brace_count -= 1
+                if brace_count == 0
+                  json_end = index
+                  break
+                end
+              end
+            end
+            
+            if json_end > 0
+              complete_json = json_part[0..json_end]
+              parsed = JSON.parse(complete_json)
+              if parsed["translated_content"].present?
+                Rails.logger.info("Successfully parsed JSON response using brace counting")
+                return {
+                  translated_text: parsed["translated_content"],
+                  translated_title: parsed["translated_title"]
+                }
+              end
+            else
+              # JSON is incomplete, try to extract translated_content manually
+              Rails.logger.warn("JSON appears to be incomplete, attempting manual extraction")
+              return extract_from_incomplete_json(json_part)
+            end
+          end
+        rescue JSON::ParserError => e
+          Rails.logger.warn("Brace counting JSON parsing failed: #{e.message}")
+        end
+      end
+
+      nil
+    end
+
+    def extract_from_incomplete_json(json_part)
+      # Try to extract translated_content from incomplete JSON
+      content_match = json_part.match(/"translated_content":\s*"([^"]*(?:\\.[^"]*)*)"/m)
+      if content_match
+        translated_content = content_match[1]
+        # Unescape JSON string
+        translated_content = translated_content.gsub('\\"', '"').gsub('\\n', "\n").gsub('\\\\', '\\')
+        
+        Rails.logger.info("Successfully extracted translated_content from incomplete JSON")
+        return {
+          translated_text: translated_content,
+          translated_title: nil # Can't extract title from incomplete JSON
+        }
+      end
+      
+      nil
     end
 
     def handle_openai_error(response)

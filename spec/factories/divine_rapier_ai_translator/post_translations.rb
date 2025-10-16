@@ -5,6 +5,7 @@ FactoryBot.define do
     association :post
     language { "es" }
     translated_content { "Contenido traducido" }
+    translated_title { "Título traducido" }
     source_language { "en" }
     translation_provider { "openai" }
     metadata { { confidence: 0.95, provider_info: { model: "gpt-4" } } }
