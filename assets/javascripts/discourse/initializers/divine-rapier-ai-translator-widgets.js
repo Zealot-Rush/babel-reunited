@@ -17,23 +17,20 @@ export default {
       console.log("✅ Plugin API loaded for Divine Rapier AI Translator");
 
       // 使用 renderInOutlet 替换 post-content-cooked-html outlet
-      // 通过 shouldRender 控制只在有翻译时渲染
+      // 现在总是渲染，让组件内部决定是否显示按钮
       api.renderInOutlet(
         "post-content-cooked-html",
         class extends LanguageTabsConnector {
           static shouldRender(args) {
             console.log("🔍 DEBUG: shouldRender called with args:", args);
+            console.log("🔍 DEBUG: post:", args.post);
+            console.log("🔍 DEBUG: post_translations:", args.post?.post_translations);
+            console.log("🔍 DEBUG: show_translation_widget:", args.post?.show_translation_widget);
+            console.log("🔍 DEBUG: show_translation_button:", args.post?.show_translation_button);
 
-            // 只有当帖子有翻译数据时才替换内容
-            const hasTranslationData =
-              args.post?.post_translations &&
-              args.post.post_translations.length > 0;
-
-            const hasTranslationFlag =
-              args.post?.show_translation_widget ||
-              args.post?.show_translation_button;
-
-            return hasTranslationFlag && hasTranslationData;
+            // 总是渲染组件，让组件内部决定是否显示按钮
+            // 组件会检查用户是否禁用了AI翻译功能
+            return true;
           }
         }
       );

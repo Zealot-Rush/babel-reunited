@@ -24,15 +24,32 @@ export default class LanguageTabsConnector extends Component {
     const baseStyle =
       "padding: 4px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; height: 24px; line-height: 1;";
 
+    // 检查语言是否可用
+    const isAvailable = this.isLanguageAvailable(languageCode);
+
     if (this.currentLanguage === languageCode) {
       return baseStyle + " background: #007bff; color: white; border: none;";
-    } else {
+    } else if (isAvailable) {
       return (
         baseStyle +
         " background: #f8f9fa; color: #007bff; border: 1px solid #007bff;"
       );
+    } else {
+      // 不可用时的灰色样式
+      return (
+        baseStyle +
+        " background: #f5f5f5; color: #999; border: 1px solid #ddd; cursor: not-allowed; opacity: 0.6;"
+      );
     }
   };
+
+  // 检查语言是否可用
+  isLanguageAvailable(languageCode) {
+    if (languageCode === "original") {
+      return true; // 原始内容总是可用的
+    }
+    return this.availableLanguages.includes(languageCode);
+  }
 
   constructor() {
     super(...arguments);
@@ -41,6 +58,8 @@ export default class LanguageTabsConnector extends Component {
     console.log("📋 Available args:", this.args);
     console.log("🔍 DEBUG: enabled:", this.enabled);
     console.log("🔍 DEBUG: language:", this.language);
+    console.log("🔍 DEBUG: isAiTranslationDisabled:", this.isAiTranslationDisabled);
+    console.log("🔍 DEBUG: preferred_language_enabled:", this.currentUser?.preferred_language_enabled);
     
     // 自动选择用户的偏好语言
     this.initializePreferredLanguage();
@@ -98,7 +117,7 @@ export default class LanguageTabsConnector extends Component {
     console.log("🔍 DEBUG: post_translations:", this.post?.post_translations);
     
     if (!this.post?.post_translations) {
-      console.log("🔍 DEBUG: No post_translations found");
+      console.log("🔍 DEBUG: No post_translations found, returning empty array");
       return [];
     }
     
@@ -118,25 +137,16 @@ export default class LanguageTabsConnector extends Component {
       en: "English",
       zh: "中文",
       es: "Español",
-      fr: "Français",
-      de: "Deutsch",
-      ja: "日本語",
-      ko: "한국어",
-      ru: "Русский",
-      ar: "العربية",
-      pt: "Português",
-      it: "Italiano",
-      nl: "Nederlands",
     };
 
-    return (
-      this.post?.post_translations?.map((t) => ({
-        code: t.post_translation?.language,
-        name:
-          languageMap[t.post_translation?.language] ||
-          t.post_translation?.language,
-      })) || []
-    );
+    // 获取所有支持的语言（包括可用的和不可用的）
+    const supportedLanguages = ["en", "zh", "es"];
+    
+    return supportedLanguages.map(code => ({
+      code: code,
+      name: languageMap[code] || code,
+      available: this.isLanguageAvailable(code)
+    }));
   }
 
   // 获取当前显示的内容（HTML格式）
@@ -168,15 +178,6 @@ export default class LanguageTabsConnector extends Component {
       en: "English",
       zh: "中文",
       es: "Español",
-      fr: "Français",
-      de: "Deutsch",
-      ja: "日本語",
-      ko: "한국어",
-      ru: "Русский",
-      ar: "العربية",
-      pt: "Português",
-      it: "Italiano",
-      nl: "Nederlands",
     };
 
     return languageMap[this.currentLanguage] || this.currentLanguage;
@@ -187,10 +188,24 @@ export default class LanguageTabsConnector extends Component {
   switchLanguage(languageCode) {
     // eslint-disable-next-line no-console
     console.log("🔄 Switching language to:", languageCode);
+    
+    // 如果语言不可用，不进行切换
+    if (!this.isLanguageAvailable(languageCode)) {
+      console.log("⚠️ Language not available:", languageCode);
+      return;
+    }
+    
     this.currentLanguage = languageCode;
   }
 
   <template>
+    {{! 调试信息 }}
+    <div style="font-size: 10px; color: #999; margin-bottom: 5px; margin-left: 12px;">
+      DEBUG: isAiTranslationDisabled={{this.isAiTranslationDisabled}}, 
+      preferred_language_enabled={{this.currentUser?.preferred_language_enabled}},
+      languageNames count={{this.languageNames.length}}
+    </div>
+    
     {{! 只有在用户启用AI翻译功能时才显示语言切换标签 }}
     {{#unless this.isAiTranslationDisabled}}
       <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; margin-left: 12px;">
@@ -205,10 +220,19 @@ export default class LanguageTabsConnector extends Component {
           <button
             style={{this.getButtonStyle langInfo.code}}
             {{on "click" (fn this.switchLanguage langInfo.code)}}
+            disabled={{unless langInfo.available true false}}
+            title={{if langInfo.available "" "Translation not available"}}
           >
             {{langInfo.name}}
+            {{#unless langInfo.available}}
+              <span style="font-size: 10px; margin-left: 4px;">(N/A)</span>
+            {{/unless}}
           </button>
         {{/each}}
+      </div>
+    {{else}}
+      <div style="font-size: 10px; color: #999; margin-bottom: 5px; margin-left: 12px;">
+        AI Translation is disabled by user
       </div>
     {{/unless}}
 
