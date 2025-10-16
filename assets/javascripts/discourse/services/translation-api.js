@@ -1,11 +1,13 @@
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import Service from "@ember/service";
+import { disableImplicitInjections } from "discourse/lib/implicit-injections";
 
 /**
  * Translation API service for handling translation-related API calls
- * @service translation-api
  */
-export default class TranslationApiService {
+@disableImplicitInjections
+export default class TranslationApiService extends Service {
   /**
    * Get all translations for a post
    * @param {number} postId - The post ID
@@ -41,13 +43,17 @@ export default class TranslationApiService {
    * Create a new translation for a post
    * @param {number} postId - The post ID
    * @param {string} targetLanguage - The target language code
+   * @param {boolean} forceUpdate - Whether to force update existing translation
    * @returns {Promise<Object>} Translation result
    */
-  async createTranslation(postId, targetLanguage) {
+  async createTranslation(postId, targetLanguage, forceUpdate = false) {
     try {
       const result = await ajax(`/ai-translator/posts/${postId}/translations`, {
         type: "POST",
-        data: { target_language: targetLanguage }
+        data: { 
+          target_language: targetLanguage,
+          force_update: forceUpdate
+        }
       });
       return result;
     } catch (error) {

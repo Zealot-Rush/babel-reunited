@@ -13,6 +13,8 @@ import { service } from "@ember/service";
 export default class LanguageTabsConnector extends Component {
   @tracked currentLanguage = "original";
   @service currentUser;
+  @service translationApi; // 添加翻译API服务
+  @service appEvents; // 添加应用事件服务
 
   // 检查用户是否禁用了AI翻译功能
   get isAiTranslationDisabled() {
@@ -35,10 +37,10 @@ export default class LanguageTabsConnector extends Component {
         " background: #f8f9fa; color: #007bff; border: 1px solid #007bff;"
       );
     } else {
-      // 不可用时的灰色样式
+      // 不可用时的样式 - 改为看起来可点击的样式
       return (
         baseStyle +
-        " background: #f5f5f5; color: #999; border: 1px solid #ddd; cursor: not-allowed; opacity: 0.6;"
+        " background: #f8f9fa; color: #6c757d; border: 1px solid #6c757d; cursor: pointer; opacity: 0.8;"
       );
     }
   };
@@ -185,17 +187,65 @@ export default class LanguageTabsConnector extends Component {
 
   // 切换语言的方法
   @action
-  switchLanguage(languageCode) {
-    // eslint-disable-next-line no-console
+  async switchLanguage(languageCode) {
     console.log("🔄 Switching language to:", languageCode);
     
-    // 如果语言不可用，不进行切换
-    if (!this.isLanguageAvailable(languageCode)) {
-      console.log("⚠️ Language not available:", languageCode);
+    // 如果语言可用，直接切换
+    if (this.isLanguageAvailable(languageCode)) {
+      this.currentLanguage = languageCode;
       return;
     }
     
-    this.currentLanguage = languageCode;
+    // 如果语言不可用且不是原始语言，触发翻译任务
+    if (languageCode !== "original") {
+      console.log("🚀 Language not available, triggering translation for:", languageCode);
+      await this.triggerTranslation(languageCode);
+    }
+  }
+
+  // 新增：触发翻译任务的方法
+  @action
+  async triggerTranslation(languageCode) {
+    try {
+      console.log(`🔄 Triggering translation for language: ${languageCode}`);
+      
+      // 显示加载状态
+      this.appEvents?.trigger("modal:alert", {
+        message: `Starting translation for ${this.getLanguageName(languageCode)}...`,
+        type: "info"
+      });
+      
+      // 调用翻译API
+      const result = await this.translationApi.createTranslation(
+        this.post.id, 
+        languageCode
+      );
+      
+      console.log("✅ Translation job triggered:", result);
+      
+      // 显示成功消息
+      this.appEvents?.trigger("modal:alert", {
+        message: `Translation started for ${this.getLanguageName(languageCode)}. It will be available shortly.`,
+        type: "success"
+      });
+      
+    } catch (error) {
+      console.error("❌ Failed to trigger translation:", error);
+      this.appEvents?.trigger("modal:alert", {
+        message: `Failed to start translation: ${error.message}`,
+        type: "error"
+      });
+    }
+  }
+
+  // 新增：获取语言名称的辅助方法
+  getLanguageName(languageCode) {
+    const languageMap = {
+      en: "English",
+      zh: "中文", 
+      es: "Español",
+    };
+    return languageMap[languageCode] || languageCode;
   }
 
   <template>
@@ -220,12 +270,14 @@ export default class LanguageTabsConnector extends Component {
           <button
             style={{this.getButtonStyle langInfo.code}}
             {{on "click" (fn this.switchLanguage langInfo.code)}}
-            disabled={{unless langInfo.available true false}}
-            title={{if langInfo.available "" "Translation not available"}}
+            title={{if langInfo.available 
+              "Switch to {{langInfo.name}}" 
+              "Click to start translation for {{langInfo.name}}"
+            }}
           >
             {{langInfo.name}}
             {{#unless langInfo.available}}
-              <span style="font-size: 10px; margin-left: 4px;">(N/A)</span>
+              <span style="font-size: 10px; margin-left: 4px;">(Click to translate)</span>
             {{/unless}}
           </button>
         {{/each}}

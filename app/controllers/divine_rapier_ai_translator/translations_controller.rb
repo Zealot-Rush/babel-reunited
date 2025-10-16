@@ -21,19 +21,31 @@ module DivineRapierAiTranslator
 
     def create
       target_language = params[:target_language]
-
+      force_update = params[:force_update] || false
+      
       return render json: { error: "Target language required" }, status: :bad_request if target_language.blank?
+      
+      # 验证语言代码格式
+      unless target_language.match?(/\A[a-z]{2}\z/)
+        return render json: { error: "Invalid language code format" }, status: :bad_request
+      end
 
-      # Check if translation already exists
-      if @post.has_translation?(target_language)
+      # Check if translation already exists (unless force update)
+      if !force_update && @post.has_translation?(target_language)
         translation = @post.get_translation(target_language)
         return render_serialized(translation, PostTranslationSerializer)
       end
 
       # Enqueue translation job
-      @post.enqueue_translation_jobs([target_language])
-
-      render json: { message: "Translation job enqueued" }
+      @post.enqueue_translation_jobs([target_language], force_update: force_update)
+      
+      render json: { 
+        message: "Translation job enqueued", 
+        post_id: @post.id,
+        target_language: target_language,
+        force_update: force_update,
+        status: "queued"
+      }
     end
 
     def destroy
