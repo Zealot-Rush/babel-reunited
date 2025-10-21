@@ -7,98 +7,182 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     force_update = args[:force_update] || false
     start_time = Time.current
 
-    return if post_id.blank? || target_language.blank?
+    return unless validate_arguments(post_id, target_language)
 
+    post = find_and_validate_post(post_id, target_language)
+    return unless post
+
+    # Create or update translation record with "translating" status
+    translation = create_or_update_translation_record(post, target_language)
+    
+    notify_translation_started(post_id, target_language, post.topic_id, translation.id)
+    log_translation_start(post_id, target_language, post, force_update)
+
+    result = execute_translation_service(post, target_language, force_update)
+    processing_time = calculate_processing_time(start_time)
+
+    handle_translation_result(result, post_id, target_language, post.topic_id, processing_time, force_update, translation)
+  end
+
+  private
+
+  def validate_arguments(post_id, target_language)
+    return false if post_id.blank? || target_language.blank?
+    true
+  end
+
+  def find_and_validate_post(post_id, target_language)
     post = Post.find_by(id: post_id)
+    
     if post.blank?
-      # 发布失败通知
-      publish_translation_status(post_id, target_language, "failed", "post_not_found")
-      DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
-        post_id: post_id,
-        target_language: target_language,
-        reason: "post_not_found",
-      )
-      return
+      handle_post_not_found(post_id, target_language)
+      return nil
     end
 
-    # Skip if post is deleted or not visible
     if post.deleted_at.present? || post.hidden?
-      publish_translation_status(post_id, target_language, "failed", "post_deleted_or_hidden", post.topic_id)
-      DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
-        post_id: post_id,
-        target_language: target_language,
-        reason: "post_deleted_or_hidden",
-      )
-      return
+      handle_post_deleted_or_hidden(post_id, target_language, post.topic_id)
+      return nil
     end
 
-    # Check if translation already exists (unless force update)
-    existing_translation =
-      DivineRapierAiTranslator::PostTranslation.find_translation(post_id, target_language)
-    if existing_translation.present? && !force_update
-      DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
-        post_id: post_id,
-        target_language: target_language,
-        reason: "translation_already_exists",
+    post
+  end
+
+  def create_or_update_translation_record(post, target_language)
+    existing_translation = DivineRapierAiTranslator::PostTranslation.find_translation(post.id, target_language)
+    
+    if existing_translation.present?
+      # Update existing translation with "translating" status and empty content
+      existing_translation.update!(
+        status: "translating",
+        translated_content: "",
+        translated_title: "",
+        metadata: existing_translation.metadata.merge(
+          translating_started_at: Time.current,
+          updated_at: Time.current,
+        ),
       )
-      return
+      existing_translation
+    else
+      # Create new translation with "translating" status and empty content
+      DivineRapierAiTranslator::PostTranslation.create!(
+        post: post,
+        language: target_language,
+        status: "translating",
+        translated_content: "",
+        translated_title: "",
+        translation_provider: "openai",
+        metadata: {
+          translating_started_at: Time.current,
+        },
+      )
     end
+  end
 
-    # 发布开始通知
-    publish_translation_status(post_id, target_language, "started", nil, post.topic_id)
+  def handle_post_not_found(post_id, target_language)
+    publish_translation_status(post_id, target_language, "failed", "post_not_found")
+    DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
+      post_id: post_id,
+      target_language: target_language,
+      reason: "post_not_found",
+    )
+  end
 
-    # Log translation start
+  def handle_post_deleted_or_hidden(post_id, target_language, topic_id)
+    publish_translation_status(post_id, target_language, "failed", "post_deleted_or_hidden", topic_id)
+    DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
+      post_id: post_id,
+      target_language: target_language,
+      reason: "post_deleted_or_hidden",
+    )
+  end
+
+  def notify_translation_started(post_id, target_language, topic_id, translation_id)
+    publish_translation_status(post_id, target_language, "started", nil, topic_id, translation_id)
+  end
+
+  def log_translation_start(post_id, target_language, post, force_update)
     DivineRapierAiTranslator::TranslationLogger.log_translation_start(
       post_id: post_id,
       target_language: target_language,
       content_length: post.raw&.length || 0,
       force_update: force_update,
     )
+  end
 
-    # Perform translation
-    result =
-      DivineRapierAiTranslator::TranslationService.new(
-        post: post,
-        target_language: target_language,
-        force_update: force_update,
-      ).call
+  def execute_translation_service(post, target_language, force_update)
+    DivineRapierAiTranslator::TranslationService.new(
+      post: post,
+      target_language: target_language,
+      force_update: force_update,
+    ).call
+  end
 
-    processing_time = ((Time.current - start_time) * 1000).round(2)
+  def calculate_processing_time(start_time)
+    ((Time.current - start_time) * 1000).round(2)
+  end
 
+  def handle_translation_result(result, post_id, target_language, topic_id, processing_time, force_update, translation)
     if result.failure?
-      # 发布失败通知
-      publish_translation_status(post_id, target_language, "failed", result.error, post.topic_id)
-      DivineRapierAiTranslator::TranslationLogger.log_translation_error(
-        post_id: post_id,
-        target_language: target_language,
-        error: StandardError.new(result.error),
-        processing_time: processing_time,
-      )
-      Rails.logger.error("Translation failed for post #{post_id}: #{result.error}")
+      handle_translation_failure(result, post_id, target_language, topic_id, processing_time, translation)
     else
-      # 发布成功通知
-      translation = result.translation
-      publish_translation_status(
-        post_id, 
-        target_language, 
-        "completed", 
-        nil, 
-        post.topic_id,
-        translation&.id,
-        translation&.translated_content
-      )
-      
-      # Log successful translation
-      ai_response = result.ai_response || {}
-      DivineRapierAiTranslator::TranslationLogger.log_translation_success(
-        post_id: post_id,
-        target_language: target_language,
-        translation_id: translation&.id,
-        ai_response: ai_response,
-        processing_time: processing_time,
-        force_update: force_update,
-      )
+      handle_translation_success(result, post_id, target_language, topic_id, processing_time, force_update, translation)
     end
+  end
+
+  def handle_translation_failure(result, post_id, target_language, topic_id, processing_time, translation)
+    # Update translation status to failed
+    translation.update!(
+      status: "failed",
+      metadata: translation.metadata.merge(
+        error: result.error,
+        failed_at: Time.current,
+      ),
+    )
+    
+    publish_translation_status(post_id, target_language, "failed", result.error, topic_id, translation.id)
+    DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+      post_id: post_id,
+      target_language: target_language,
+      error: StandardError.new(result.error),
+      processing_time: processing_time,
+    )
+    Rails.logger.error("Translation failed for post #{post_id}: #{result.error}")
+  end
+
+  def handle_translation_success(result, post_id, target_language, topic_id, processing_time, force_update, translation)
+    # Update translation with actual translated content and completed status
+    translation.update!(
+      status: "completed",
+      translated_content: result.translation.translated_content,
+      translated_title: result.translation.translated_title,
+      source_language: result.translation.source_language,
+      metadata: translation.metadata.merge(
+        confidence: result.ai_response[:confidence],
+        provider_info: result.ai_response[:provider_info],
+        translated_at: Time.current,
+        completed_at: Time.current,
+      ),
+    )
+    
+    publish_translation_status(
+      post_id, 
+      target_language, 
+      "completed", 
+      nil, 
+      topic_id,
+      translation.id,
+      translation.translated_content
+    )
+    
+    ai_response = result.ai_response || {}
+    DivineRapierAiTranslator::TranslationLogger.log_translation_success(
+      post_id: post_id,
+      target_language: target_language,
+      translation_id: translation.id,
+      ai_response: ai_response,
+      processing_time: processing_time,
+      force_update: force_update,
+    )
   end
 
   private

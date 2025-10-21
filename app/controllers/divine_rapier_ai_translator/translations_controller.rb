@@ -30,13 +30,7 @@ module DivineRapierAiTranslator
         return render json: { error: "Invalid language code format" }, status: :bad_request
       end
 
-      # Check if translation already exists (unless force update)
-      if !force_update && @post.has_translation?(target_language)
-        translation = @post.get_translation(target_language)
-        return render_serialized(translation, PostTranslationSerializer)
-      end
-
-      # Enqueue translation job
+      # Always enqueue translation job - no skipping based on existing translations
       @post.enqueue_translation_jobs([target_language], force_update: force_update)
       
       render json: { 

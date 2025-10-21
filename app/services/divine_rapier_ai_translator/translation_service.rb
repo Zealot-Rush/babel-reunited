@@ -18,13 +18,6 @@ module DivineRapierAiTranslator
       return context.fail(error: "Post not found") if @post.blank?
       return context.fail(error: "Target language not specified") if @target_language.blank?
 
-      # Check if translation already exists (unless force update)
-      existing_translation = PostTranslation.find_translation(@post.id, @target_language)
-      if existing_translation.present? && !@force_update
-        context[:translation] = existing_translation
-        return context
-      end
-
       # Prepare content for translation
       content_to_translate = prepare_content_for_translation(@post.cooked)
       
@@ -36,8 +29,8 @@ module DivineRapierAiTranslator
 
       return context.fail(error: translation_result[:error]) if translation_result[:error]
 
-      # Save or update translation
-      translation = create_or_update_translation(translation_result, existing_translation)
+      # Create translation result object (not saved to database yet)
+      translation = create_translation_result(translation_result)
       context[:translation] = translation
       context[:ai_response] = translation_result # Add AI response to context for logging
       context
@@ -102,6 +95,16 @@ module DivineRapierAiTranslator
     rescue => e
       Rails.logger.error("OpenAI API error: #{e.message}")
       { error: "Translation service temporarily unavailable" }
+    end
+
+    def create_translation_result(translation_result)
+      # Create a temporary translation object with the translated content
+      # This will be used by the job to update the actual database record
+      OpenStruct.new(
+        translated_content: translation_result[:translated_text],
+        translated_title: translation_result[:translated_title],
+        source_language: translation_result[:source_language],
+      )
     end
 
     def create_or_update_translation(translation_result, existing_translation)

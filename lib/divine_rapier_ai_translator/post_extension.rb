@@ -34,8 +34,7 @@ module DivineRapierAiTranslator
       return if target_languages.blank?
 
       target_languages.each do |language|
-        next if !force_update && has_translation?(language)
-
+        # Always enqueue translation job - no skipping based on existing translations
         Jobs.enqueue(
           :translate_post,
           post_id: id,

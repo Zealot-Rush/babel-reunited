@@ -7,7 +7,7 @@ module DivineRapierAiTranslator
     belongs_to :post
 
     validates :language, presence: true, length: { maximum: 10 }
-    validates :translated_content, presence: true
+    validates :translated_content, presence: true, unless: :translating?
     validates :translated_title, length: { maximum: 255 }, allow_blank: true
     validates :post_id, uniqueness: { scope: :language }
     validates :language, format: { with: /\A[a-z]{2}(-[A-Z]{2})?\z/, message: "must be a valid language code" }
@@ -25,6 +25,18 @@ module DivineRapierAiTranslator
 
     def source_language_detected?
       source_language.present?
+    end
+
+    def translating?
+      status == "translating"
+    end
+
+    def completed?
+      status == "completed"
+    end
+
+    def failed?
+      status == "failed"
     end
 
     def provider_info
