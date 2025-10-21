@@ -147,5 +147,20 @@ export default class TranslationApiService extends Service {
       throw error;
     }
   }
+
+  /**
+   * Get translation status for a post
+   * @param {number} postId - The post ID
+   * @returns {Promise<Object>} Translation status including pending and available translations
+   */
+  async getTranslationStatus(postId) {
+    try {
+      const result = await ajax(`/ai-translator/posts/${postId}/translations/translation_status`);
+      return result;
+    } catch (error) {
+      popupAjaxError(error);
+      throw error;
+    }
+  }
 }
 

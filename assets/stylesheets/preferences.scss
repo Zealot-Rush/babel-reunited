@@ -173,3 +173,25 @@
   font-weight: 600 !important;
   color: white !important;
 }
+
+// Translation animation styles
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.translating-button {
+  animation: pulse 1.5s infinite;
+  
+  &::after {
+    content: "⟳";
+    margin-left: 4px;
+    animation: spin 1s linear infinite;
+  }
+}

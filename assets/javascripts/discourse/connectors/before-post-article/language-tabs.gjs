@@ -5,6 +5,8 @@ import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { htmlSafe } from "@ember/template";
 import { service } from "@ember/service";
+import { get } from "@ember/object";
+import { eq } from "truth-helpers";
 
 /**
  * Simple language tabs connector component
@@ -15,6 +17,12 @@ export default class LanguageTabsConnector extends Component {
   @service currentUser;
   @service translationApi; // 添加翻译API服务
   @service appEvents; // 添加应用事件服务
+  @service translationStatus; // 新增翻译状态服务
+  
+  // 存储翻译状态
+  @tracked translationStates = new Map();
+  @tracked refreshTrigger = 0;
+  @tracked contentRefreshScheduled = false; // 用于强制重新计算 availableLanguages
 
   // 检查用户是否禁用了AI翻译功能
   get isAiTranslationDisabled() {
@@ -23,11 +31,17 @@ export default class LanguageTabsConnector extends Component {
 
   // 获取按钮样式 - 使用箭头函数保持this上下文
   getButtonStyle = (languageCode) => {
+    // 使用 refreshTrigger 来强制重新计算
+    this.refreshTrigger; // 这会触发重新计算当 refreshTrigger 改变时
+    
     const baseStyle =
       "padding: 4px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; height: 24px; line-height: 1;";
 
     // 检查语言是否可用
     const isAvailable = this.isLanguageAvailable(languageCode);
+    const translationStatus = this.translationStates.get(languageCode);
+    const isTranslating = translationStatus?.status === "started";
+
 
     if (this.currentLanguage === languageCode) {
       return baseStyle + " background: #007bff; color: white; border: none;";
@@ -35,6 +49,12 @@ export default class LanguageTabsConnector extends Component {
       return (
         baseStyle +
         " background: #f8f9fa; color: #007bff; border: 1px solid #007bff;"
+      );
+    } else if (isTranslating) {
+      // 翻译中的样式
+      return (
+        baseStyle +
+        " background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; animation: pulse 1.5s infinite;"
       );
     } else {
       // 不可用时的样式 - 改为看起来可点击的样式
@@ -46,25 +66,172 @@ export default class LanguageTabsConnector extends Component {
   };
 
   // 检查语言是否可用
-  isLanguageAvailable(languageCode) {
+  isLanguageAvailable = (languageCode) => {
+    // 使用 refreshTrigger 来强制重新计算
+    this.refreshTrigger; // 这会触发重新计算当 refreshTrigger 改变时
+    
     if (languageCode === "original") {
       return true; // 原始内容总是可用的
     }
-    return this.availableLanguages.includes(languageCode);
-  }
+    const isAvailable = this.availableLanguages.includes(languageCode);
+    console.log(`🔍 Checking if ${languageCode} is available:`, isAvailable);
+    return isAvailable;
+  };
 
   constructor() {
     super(...arguments);
     console.log("🔍 DEBUG: currentUser:", this.currentUser);
     console.log("🚀 LanguageTabsConnector constructor called!");
     console.log("📋 Available args:", this.args);
+    console.log("🔍 DEBUG: post:", this.post);
+    console.log("🔍 DEBUG: post.id:", this.post?.id);
     console.log("🔍 DEBUG: enabled:", this.enabled);
     console.log("🔍 DEBUG: language:", this.language);
     console.log("🔍 DEBUG: isAiTranslationDisabled:", this.isAiTranslationDisabled);
     console.log("🔍 DEBUG: preferred_language_enabled:", this.currentUser?.preferred_language_enabled);
     
+    // 订阅翻译状态更新
+    this.appEvents.on("translation:status-changed", this.handleTranslationStatusChange);
+    console.log("📢 Registered translation:status-changed event listener");
+    
+    // 订阅当前话题的翻译状态
+    if (this.post?.topic_id) {
+      console.log(`📡 Subscribing to translation status for topic ${this.post.topic_id}`);
+      this.translationStatus.subscribeToTopic(this.post.topic_id);
+    } else {
+      console.log("⚠️ No topic ID available for translation status subscription");
+    }
+    
     // 自动选择用户的偏好语言
     this.initializePreferredLanguage();
+  }
+
+  willDestroy() {
+    super.willDestroy();
+    this.appEvents.off("translation:status-changed", this.handleTranslationStatusChange);
+    if (this.post?.topic_id) {
+      this.translationStatus.unsubscribeFromTopic(this.post.topic_id);
+    }
+  }
+
+  // 处理翻译状态变化
+  @action
+  handleTranslationStatusChange(data) {
+    console.log(`🔄 Component received translation status change:`, data);
+    
+    if (data.postId === this.post?.id) {
+      console.log(`✅ Status change is for current post ${this.post.id}`);
+      
+      // 创建新的Map来触发重新渲染
+      const newTranslationStates = new Map(this.translationStates);
+      newTranslationStates.set(data.targetLanguage, {
+        status: data.status,
+        error: data.error,
+        translationId: data.translationId,
+        translatedContent: data.translatedContent
+      });
+      this.translationStates = newTranslationStates;
+      
+      console.log(`📊 Updated translation state for ${data.targetLanguage}: ${data.status}`);
+      
+      // 强制触发UI更新
+      this.refreshTrigger++;
+      console.log(`🔄 Incremented refreshTrigger to: ${this.refreshTrigger}`);
+      
+      // 如果翻译完成，刷新可用语言列表和翻译内容
+      if (data.status === "completed") {
+        console.log(`🔄 Translation completed, refreshing available languages and content`);
+        this.refreshAvailableLanguages();
+        // 立即刷新翻译内容
+        this.refreshPostTranslations();
+      } else {
+        console.log(`ℹ️ Translation status is ${data.status}, not refreshing available languages yet`);
+      }
+    } else {
+      console.log(`ℹ️ Status change is for different post ${data.postId} in same topic, current post is ${this.post?.id}`);
+      // 显示其他post的更新通知
+      this.showOtherPostUpdateNotification(data.postId, data.targetLanguage, data.status);
+    }
+  }
+
+  // 刷新可用语言列表
+  async refreshAvailableLanguages() {
+    try {
+      const status = await this.translationApi.getTranslationStatus(this.post.id);
+      
+      // 触发重新计算 availableLanguages
+      this.refreshTrigger++;
+    } catch (error) {
+      console.error("Failed to refresh available languages:", error);
+    }
+  }
+
+  // 调度内容刷新
+  scheduleContentRefresh() {
+    if (this.contentRefreshScheduled) {
+      return; // 防止重复调度
+    }
+    
+    this.contentRefreshScheduled = true;
+    
+    // 延迟刷新，给后端时间保存翻译
+    setTimeout(async () => {
+      try {
+        await this.refreshPostTranslations();
+      } catch (error) {
+        console.error("Failed to refresh post translations:", error);
+      } finally {
+        this.contentRefreshScheduled = false; // 重置标志
+      }
+    }, 1000); // 1秒延迟
+  }
+
+  // 刷新帖子的翻译数据
+  async refreshPostTranslations() {
+    try {
+      const translations = await this.translationApi.getTranslations(this.post.id);
+      
+      // 更新 post 的 post_translations
+      if (this.post && translations) {
+        this.post.post_translations = translations;
+      }
+      
+      // 触发重新计算
+      this.refreshTrigger++;
+    } catch (error) {
+      console.error("Failed to refresh post translations:", error);
+    }
+  }
+
+  // 显示其他post的更新通知
+  showOtherPostUpdateNotification(postId, targetLanguage, status) {
+    const languageNames = {
+      en: "English",
+      zh: "中文", 
+      es: "Español"
+    };
+    
+    const languageName = languageNames[targetLanguage] || targetLanguage;
+    
+    if (status === "completed") {
+      // 显示翻译完成通知
+      this.appEvents.trigger("notify:info", {
+        message: `Post #${postId} has been translated to ${languageName}. Please refresh to see the translation.`,
+        duration: 5000
+      });
+    } else if (status === "started") {
+      // 显示翻译开始通知
+      this.appEvents.trigger("notify:info", {
+        message: `Post #${postId} is being translated to ${languageName}...`,
+        duration: 3000
+      });
+    } else if (status === "failed") {
+      // 显示翻译失败通知
+      this.appEvents.trigger("notify:error", {
+        message: `Translation of Post #${postId} to ${languageName} failed.`,
+        duration: 5000
+      });
+    }
   }
 
   /**
@@ -114,27 +281,35 @@ export default class LanguageTabsConnector extends Component {
   }
 
   get availableLanguages() {
-    console.log("🔍 DEBUG: Getting availableLanguages");
-    console.log("🔍 DEBUG: post:", this.post);
-    console.log("🔍 DEBUG: post_translations:", this.post?.post_translations);
+    // 使用 refreshTrigger 来强制重新计算
+    this.refreshTrigger; // 这会触发重新计算当 refreshTrigger 改变时
     
-    if (!this.post?.post_translations) {
-      console.log("🔍 DEBUG: No post_translations found, returning empty array");
-      return [];
+    // 从 post_translations 获取已存在的翻译
+    let languages = [];
+    if (this.post?.post_translations) {
+      languages = this.post.post_translations.map((t) => {
+        return t.post_translation?.language;
+      }).filter(Boolean);
     }
     
-    const languages = this.post.post_translations.map((t, index) => {
-      console.log(`🔍 DEBUG: Translation ${index}:`, t);
-      console.log(`🔍 DEBUG: Translation ${index} post_translation:`, t.post_translation);
-      console.log(`🔍 DEBUG: Translation ${index} language:`, t.post_translation?.language);
-      return t.post_translation?.language;
-    }).filter(Boolean);
+    // 从 translationStates 获取已完成的翻译
+    const completedTranslations = [];
+    for (const [language, state] of this.translationStates) {
+      if (state.status === "completed") {
+        completedTranslations.push(language);
+      }
+    }
     
-    console.log("🔍 DEBUG: Final availableLanguages:", languages);
-    return languages;
+    // 合并两个来源的语言列表
+    const allLanguages = [...new Set([...languages, ...completedTranslations])];
+    
+    return allLanguages;
   }
 
   get languageNames() {
+    // 使用 refreshTrigger 来强制重新计算
+    this.refreshTrigger; // 这会触发重新计算当 refreshTrigger 改变时
+    
     const languageMap = {
       en: "English",
       zh: "中文",
@@ -144,24 +319,49 @@ export default class LanguageTabsConnector extends Component {
     // 获取所有支持的语言（包括可用的和不可用的）
     const supportedLanguages = ["en", "zh", "es"];
     
-    return supportedLanguages.map(code => ({
+    const result = supportedLanguages.map(code => ({
       code: code,
       name: languageMap[code] || code,
       available: this.isLanguageAvailable(code)
     }));
+    
+    return result;
   }
 
   // 获取当前显示的内容（HTML格式）
   get currentContent() {
+    // 使用 refreshTrigger 来强制重新计算
+    this.refreshTrigger; // 这会触发重新计算当 refreshTrigger 改变时
+    
     if (this.currentLanguage === "original") {
       return this.post?.cooked || this.post?.raw || "";
     }
 
-    const translation = this.post?.post_translations?.find(
-      (t) => t.post_translation?.language === this.currentLanguage
-    );
+    // 首先检查 post_translations 中的翻译
+    let translation = null;
+    if (this.post?.post_translations) {
+      translation = this.post.post_translations.find(
+        (t) => t.post_translation?.language === this.currentLanguage
+      );
+    }
 
-    const translatedContent = translation?.post_translation?.translated_content || "";
+    let translatedContent = "";
+    if (translation?.post_translation?.translated_content) {
+      translatedContent = translation.post_translation.translated_content;
+    } else {
+      // 如果 post_translations 中没有，检查 translationStates 中是否有已完成的翻译
+      const translationState = this.translationStates.get(this.currentLanguage);
+      if (translationState?.status === "completed") {
+        if (translationState?.translatedContent) {
+          translatedContent = translationState.translatedContent;
+        } else {
+          // 调度内容刷新作为后备方案（防止重复调度）
+          if (!this.contentRefreshScheduled) {
+            this.scheduleContentRefresh();
+          }
+        }
+      }
+    }
     
     if (translatedContent) {
       return translatedContent;
@@ -267,19 +467,28 @@ export default class LanguageTabsConnector extends Component {
         </button>
 
         {{#each this.languageNames as |langInfo|}}
-          <button
-            style={{this.getButtonStyle langInfo.code}}
-            {{on "click" (fn this.switchLanguage langInfo.code)}}
-            title={{if langInfo.available 
-              "Switch to {{langInfo.name}}" 
-              "Click to start translation for {{langInfo.name}}"
-            }}
-          >
-            {{langInfo.name}}
-            {{#unless langInfo.available}}
-              <span style="font-size: 10px; margin-left: 4px;">(Click to translate)</span>
-            {{/unless}}
-          </button>
+          {{#let (get this.translationStates langInfo.code) as |translationState|}}
+            <button
+              style={{this.getButtonStyle langInfo.code}}
+              {{on "click" (fn this.switchLanguage langInfo.code)}}
+              title={{if langInfo.available 
+                "Switch to {{langInfo.name}}" 
+                (if (eq translationState.status "started")
+                  "Translating {{langInfo.name}}..."
+                  "Click to start translation for {{langInfo.name}}"
+                )
+              }}
+            >
+              {{langInfo.name}}
+              {{#unless langInfo.available}}
+                {{#if (eq translationState.status "started")}}
+                  <span style="font-size: 10px; margin-left: 4px;">(Translating...)</span>
+                {{else}}
+                  <span style="font-size: 10px; margin-left: 4px;">(Click to translate)</span>
+                {{/if}}
+              {{/unless}}
+            </button>
+          {{/let}}
         {{/each}}
       </div>
     {{else}}

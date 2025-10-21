@@ -2,7 +2,11 @@
 
 DivineRapierAiTranslator::Engine.routes.draw do
   resources :posts, only: [] do
-    resources :translations, only: [:index, :show, :create, :destroy]
+    resources :translations, only: [:index, :show, :create, :destroy] do
+      collection do
+        get :translation_status  # GET /posts/:post_id/translations/translation_status
+      end
+    end
   end
 
   # User preference routes
