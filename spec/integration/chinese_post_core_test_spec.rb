@@ -8,7 +8,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
 
   before do
     SiteSetting.divine_rapier_ai_translator_enabled = true
-    SiteSetting.divine_rapier_ai_translator_auto_translate_languages = "en,zh,es"
+    SiteSetting.divine_rapier_ai_translator_auto_translate_languages = "en,zh-cn,es"
   end
 
   describe "core translation functionality" do
@@ -38,7 +38,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
         post: post,
         language: "en",
         translated_content: "This is a Chinese article about artificial intelligence. AI technology is developing rapidly and changing our way of life.",
-        source_language: "zh",
+        source_language: "zh-cn",
         translation_provider: "openai",
         metadata: {
           confidence: 0.95,
@@ -55,7 +55,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
       expect(english_translation.post).to eq(post)
       expect(english_translation.language).to eq("en")
       expect(english_translation.translated_content).to include("artificial intelligence")
-      expect(english_translation.source_language).to eq("zh")
+      expect(english_translation.source_language).to eq("zh-cn")
       expect(english_translation.translation_provider).to eq("openai")
       expect(english_translation.translation_confidence).to eq(0.95)
       expect(english_translation.source_language_detected?).to be true
@@ -69,7 +69,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
         post: post,
         language: "ja",
         translated_content: "これは人工知能に関する中国語の記事です。AI技術は急速に発展し、私たちの生活様式を変えています。",
-        source_language: "zh",
+        source_language: "zh-cn",
         translation_provider: "openai",
         metadata: {
           confidence: 0.92,
@@ -169,7 +169,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
       
       # Simulate what should happen when a Chinese post is created
       # This represents the core functionality we want to test
-      target_languages = ["en", "zh-CN", "ja"]
+      target_languages = ["en", "zh-cn", "ja"]
       
       # For each target language, check if translation exists, if not, enqueue job
       target_languages.each do |language|
@@ -185,7 +185,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
             post: post,
             language: language,
             translated_content: "Simulated translation for #{language}",
-            source_language: "zh",
+            source_language: "zh-cn",
             translation_provider: "openai"
           )
         end
@@ -194,7 +194,7 @@ RSpec.describe "Chinese Post Core Functionality Test", type: :integration do
       # Verify all translations were created
       expect(DivineRapierAiTranslator::PostTranslation.where(post: post).count).to eq(3)
       expect(DivineRapierAiTranslator::PostTranslation.find_translation(post.id, "en")).to be_present
-      expect(DivineRapierAiTranslator::PostTranslation.find_translation(post.id, "zh-CN")).to be_present
+      expect(DivineRapierAiTranslator::PostTranslation.find_translation(post.id, "zh-cn")).to be_present
       expect(DivineRapierAiTranslator::PostTranslation.find_translation(post.id, "ja")).to be_present
     end
   end

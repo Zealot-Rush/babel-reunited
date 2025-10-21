@@ -40,7 +40,7 @@ export default class AiTranslationLanguage extends Component {
   get languageOptions() {
     return [
       { value: "en", label: "English", flag: "🇺🇸" },
-      { value: "zh", label: "中文", flag: "🇨🇳" },
+      { value: "zh-cn", label: "中文", flag: "🇨🇳" },
       { value: "es", label: "Español", flag: "🇪🇸" }
     ];
   }

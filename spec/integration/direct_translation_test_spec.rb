@@ -8,7 +8,7 @@ RSpec.describe "Direct Translation Test", type: :integration do
 
   before do
     SiteSetting.divine_rapier_ai_translator_enabled = true
-    SiteSetting.divine_rapier_ai_translator_auto_translate_languages = "en,zh,es"
+    SiteSetting.divine_rapier_ai_translator_auto_translate_languages = "en,zh-cn,es"
   end
 
   describe "manual translation job enqueuing" do
@@ -31,11 +31,11 @@ RSpec.describe "Direct Translation Test", type: :integration do
       )
       expect(Jobs).to receive(:enqueue).with(
         :translate_post,
-        { post_id: post.id, target_language: "zh-CN" }
+        { post_id: post.id, target_language: "zh-cn" }
       )
       
       # Simulate the enqueue_translation_jobs method call
-      target_languages = ["en", "zh-CN"]
+      target_languages = ["en", "zh-cn"]
       target_languages.each do |language|
         Jobs.enqueue(
           :translate_post,
@@ -53,7 +53,7 @@ RSpec.describe "Direct Translation Test", type: :integration do
         post: post,
         language: "en",
         translated_content: "This is a Chinese article about artificial intelligence.",
-        source_language: "zh",
+        source_language: "zh-cn",
         translation_provider: "openai",
         metadata: {
           confidence: 0.95,

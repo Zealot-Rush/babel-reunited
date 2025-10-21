@@ -19,6 +19,9 @@ module DivineRapierAiTranslator
     end
     
     def self.log_translation_success(post_id:, target_language:, translation_id:, ai_response:, processing_time:, force_update: false)
+      # Extract model name from provider_info if available
+      model_name = ai_response.dig(:provider_info, :model) || ai_response[:model] || "unknown"
+      
       log_entry = {
         timestamp: Time.current.iso8601,
         event: "translation_completed",
@@ -28,8 +31,8 @@ module DivineRapierAiTranslator
         status: "success",
         force_update: force_update,
         processing_time_ms: processing_time,
-        ai_model: ai_response[:model] || "unknown",
-        ai_usage: ai_response[:usage] || {},
+        ai_model: model_name,
+        ai_usage: ai_response.dig(:provider_info, :tokens_used) ? { tokens_used: ai_response.dig(:provider_info, :tokens_used) } : {},
         translated_length: ai_response[:translated_text]&.length || 0
       }
       

@@ -74,18 +74,31 @@ export default class LanguageTabsConnector extends Component {
       return true; // 原始内容总是可用的
     }
     const isAvailable = this.availableLanguages.includes(languageCode);
+    console.log(`🔍 Checking if ${languageCode} is available:`, isAvailable);
     return isAvailable;
   };
 
   constructor() {
     super(...arguments);
+    console.log("🔍 DEBUG: currentUser:", this.currentUser);
+    console.log("🚀 LanguageTabsConnector constructor called!");
+    console.log("📋 Available args:", this.args);
+    console.log("🔍 DEBUG: post:", this.post);
+    console.log("🔍 DEBUG: post.id:", this.post?.id);
+    console.log("🔍 DEBUG: enabled:", this.enabled);
+    console.log("🔍 DEBUG: language:", this.language);
+    console.log("🔍 DEBUG: preferred_language_enabled:", this.currentUser?.preferred_language_enabled);
     
     // 订阅翻译状态更新
     this.appEvents.on("translation:status-changed", this.handleTranslationStatusChange);
+    console.log("📢 Registered translation:status-changed event listener");
     
     // 订阅当前话题的翻译状态
     if (this.post?.topic_id) {
+      console.log(`📡 Subscribing to translation status for topic ${this.post.topic_id}`);
       this.translationStatus.subscribeToTopic(this.post.topic_id);
+    } else {
+      console.log("⚠️ No topic ID available for translation status subscription");
     }
     
     // 自动选择用户的偏好语言
@@ -103,7 +116,11 @@ export default class LanguageTabsConnector extends Component {
   // 处理翻译状态变化
   @action
   handleTranslationStatusChange(data) {
+    console.log(`🔄 Component received translation status change:`, data);
+    
     if (data.postId === this.post?.id) {
+      console.log(`✅ Status change is for current post ${this.post.id}`);
+      
       // 创建新的Map来触发重新渲染
       const newTranslationStates = new Map(this.translationStates);
       newTranslationStates.set(data.targetLanguage, {
@@ -114,16 +131,23 @@ export default class LanguageTabsConnector extends Component {
       });
       this.translationStates = newTranslationStates;
       
+      console.log(`📊 Updated translation state for ${data.targetLanguage}: ${data.status}`);
+      
       // 强制触发UI更新
       this.refreshTrigger++;
+      console.log(`🔄 Incremented refreshTrigger to: ${this.refreshTrigger}`);
       
       // 如果翻译完成，刷新可用语言列表和翻译内容
       if (data.status === "completed") {
+        console.log(`🔄 Translation completed, refreshing available languages and content`);
         this.refreshAvailableLanguages();
         // 立即刷新翻译内容
         this.refreshPostTranslations();
+      } else {
+        console.log(`ℹ️ Translation status is ${data.status}, not refreshing available languages yet`);
       }
     } else {
+      console.log(`ℹ️ Status change is for different post ${data.postId} in same topic, current post is ${this.post?.id}`);
       // 显示其他post的更新通知
       this.showOtherPostUpdateNotification(data.postId, data.targetLanguage, data.status);
     }
@@ -137,7 +161,7 @@ export default class LanguageTabsConnector extends Component {
       // 触发重新计算 availableLanguages
       this.refreshTrigger++;
     } catch (error) {
-      // Failed to refresh available languages
+      console.error("Failed to refresh available languages:", error);
     }
   }
 
@@ -154,7 +178,7 @@ export default class LanguageTabsConnector extends Component {
       try {
         await this.refreshPostTranslations();
       } catch (error) {
-        // Failed to refresh post translations
+        console.error("Failed to refresh post translations:", error);
       } finally {
         this.contentRefreshScheduled = false; // 重置标志
       }
@@ -174,7 +198,7 @@ export default class LanguageTabsConnector extends Component {
       // 触发重新计算
       this.refreshTrigger++;
     } catch (error) {
-      // Failed to refresh post translations
+      console.error("Failed to refresh post translations:", error);
     }
   }
 
@@ -182,7 +206,7 @@ export default class LanguageTabsConnector extends Component {
   showOtherPostUpdateNotification(postId, targetLanguage, status) {
     const languageNames = {
       en: "English",
-      zh: "中文", 
+      "zh-cn": "中文", 
       es: "Español"
     };
     
@@ -215,23 +239,38 @@ export default class LanguageTabsConnector extends Component {
    * 如果用户禁用了AI翻译功能，则不进行自动选择
    */
   initializePreferredLanguage() {
+    console.log("🔍 DEBUG: initializePreferredLanguage called");
+    console.log("🔍 DEBUG: currentUser:", this.currentUser);
+    console.log("🔍 DEBUG: preferred_language:", this.currentUser?.preferred_language);
+    console.log("🔍 DEBUG: preferred_language_enabled:", this.currentUser?.preferred_language_enabled);
+    
     // 如果用户禁用了AI翻译功能，直接使用原始内容
     if (this.isAiTranslationDisabled) {
+      console.log("🚫 User has disabled AI translation, using original content");
       this.currentLanguage = "original";
       return;
     }
     
     if (!this.currentUser?.preferred_language) {
+      console.log("🔍 DEBUG: No user preferred language set, using original");
       return;
     }
 
     const preferredLanguage = this.currentUser.preferred_language;
+    console.log("🔍 DEBUG: User preferred language:", preferredLanguage);
     
     // 检查偏好语言是否在可用翻译中
     const availableLanguages = this.availableLanguages;
+    console.log("🔍 DEBUG: Available languages:", availableLanguages);
+    console.log("🔍 DEBUG: Does availableLanguages include preferred language?", availableLanguages.includes(preferredLanguage));
     
     if (availableLanguages.includes(preferredLanguage)) {
+      console.log("✅ Auto-selecting user preferred language:", preferredLanguage);
       this.currentLanguage = preferredLanguage;
+    } else {
+      console.log("⚠️ User preferred language not available in translations, using original");
+      console.log("🔍 DEBUG: Preferred language:", preferredLanguage);
+      console.log("🔍 DEBUG: Available languages:", availableLanguages);
     }
   }
 
@@ -271,12 +310,12 @@ export default class LanguageTabsConnector extends Component {
     
     const languageMap = {
       en: "English",
-      zh: "中文",
+      "zh-cn": "中文",
       es: "Español",
     };
 
     // 获取所有支持的语言（包括可用的和不可用的）
-    const supportedLanguages = ["en", "zh", "es"];
+    const supportedLanguages = ["en", "zh-cn", "es"];
     
     const result = supportedLanguages.map(code => ({
       code: code,
@@ -337,7 +376,7 @@ export default class LanguageTabsConnector extends Component {
 
     const languageMap = {
       en: "English",
-      zh: "中文",
+      "zh-cn": "中文",
       es: "Español",
     };
 
@@ -347,6 +386,8 @@ export default class LanguageTabsConnector extends Component {
   // 切换语言的方法
   @action
   async switchLanguage(languageCode) {
+    console.log("🔄 Switching language to:", languageCode);
+    
     // 如果语言可用，直接切换
     if (this.isLanguageAvailable(languageCode)) {
       this.currentLanguage = languageCode;
@@ -355,6 +396,7 @@ export default class LanguageTabsConnector extends Component {
     
     // 如果语言不可用且不是原始语言，触发翻译任务
     if (languageCode !== "original") {
+      console.log("🚀 Language not available, triggering translation for:", languageCode);
       await this.triggerTranslation(languageCode);
     }
   }
@@ -363,6 +405,8 @@ export default class LanguageTabsConnector extends Component {
   @action
   async triggerTranslation(languageCode) {
     try {
+      console.log(`🔄 Triggering translation for language: ${languageCode}`);
+      
       // 显示加载状态
       this.appEvents?.trigger("modal:alert", {
         message: `Starting translation for ${this.getLanguageName(languageCode)}...`,
@@ -375,6 +419,8 @@ export default class LanguageTabsConnector extends Component {
         languageCode
       );
       
+      console.log("✅ Translation job triggered:", result);
+      
       // 显示成功消息
       this.appEvents?.trigger("modal:alert", {
         message: `Translation started for ${this.getLanguageName(languageCode)}. It will be available shortly.`,
@@ -382,6 +428,7 @@ export default class LanguageTabsConnector extends Component {
       });
       
     } catch (error) {
+      console.error("❌ Failed to trigger translation:", error);
       this.appEvents?.trigger("modal:alert", {
         message: `Failed to start translation: ${error.message}`,
         type: "error"
@@ -393,13 +440,13 @@ export default class LanguageTabsConnector extends Component {
   getLanguageName(languageCode) {
     const languageMap = {
       en: "English",
-      zh: "中文", 
+      "zh-cn": "中文", 
       es: "Español",
     };
     return languageMap[languageCode] || languageCode;
   }
 
-  <template>
+  <template>    
     {{! 只有在用户启用AI翻译功能时才显示语言切换标签 }}
     {{#unless this.isAiTranslationDisabled}}
       <div style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; margin-left: 12px;">

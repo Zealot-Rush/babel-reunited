@@ -1,4 +1,9 @@
 en:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          divine_rapier_ai_translator: "AI Translator"
   js:
     divine_rapier_ai_translator:
       preferences:

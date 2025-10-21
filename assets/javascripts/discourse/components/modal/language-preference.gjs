@@ -96,9 +96,9 @@ export default class LanguagePreferenceModal extends Component {
             <span class="language-name">English</span>
           </button>
           <button 
-            class="language-btn language-btn-zh" 
+            class="language-btn language-btn-zh-cn" 
             disabled={{this.saving}}
-            {{on "click" (fn this.selectLanguage "zh")}}
+            {{on "click" (fn this.selectLanguage "zh-cn")}}
           >
             <span class="flag">🇨🇳</span>
             <span class="language-name">中文</span>

@@ -10,7 +10,7 @@ module DivineRapierAiTranslator
     validates :translated_content, presence: true, unless: :translating?
     validates :translated_title, length: { maximum: 255 }, allow_blank: true
     validates :post_id, uniqueness: { scope: :language }
-    validates :language, format: { with: /\A[a-z]{2}(-[A-Z]{2})?\z/, message: "must be a valid language code" }
+    validates :language, format: { with: /\A[a-z]{2}(-[a-z]{2})?\z/, message: "must be a valid language code" }
 
     scope :by_language, ->(lang) { where(language: lang) }
     scope :recent, -> { order(created_at: :desc) }

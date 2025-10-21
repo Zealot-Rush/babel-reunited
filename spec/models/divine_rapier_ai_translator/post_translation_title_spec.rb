@@ -7,7 +7,7 @@ RSpec.describe DivineRapierAiTranslator::PostTranslation, type: :model do
   let(:topic) { Fabricate(:topic, title: "Test Topic Title", user: user) }
   let(:post) { Fabricate(:post, topic: topic, user: user, post_number: 1) }
   let(:reply_post) { Fabricate(:post, topic: topic, user: user, post_number: 2) }
-  let(:language) { "zh" }
+  let(:language) { "zh-cn" }
 
   describe "translated_title validations" do
     it "allows blank translated_title" do

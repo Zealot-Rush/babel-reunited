@@ -6,7 +6,7 @@ RSpec.describe DivineRapierAiTranslator::TranslationService, type: :service do
   let(:user) { Fabricate(:user) }
   let(:topic) { Fabricate(:topic, title: "Test Topic Title", user: user) }
   let(:post) { Fabricate(:post, topic: topic, user: user, post_number: 1) }
-  let(:target_language) { "zh" }
+  let(:target_language) { "zh-cn" }
 
   before do
     SiteSetting.divine_rapier_ai_translator_translate_title = true

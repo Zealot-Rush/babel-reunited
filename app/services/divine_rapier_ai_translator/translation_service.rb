@@ -54,8 +54,8 @@ module DivineRapierAiTranslator
     end
 
     def call_openai_api(content, target_language, title = nil)
-      api_key = SiteSetting.divine_rapier_ai_translator_openai_api_key
-      return { error: "OpenAI API key not configured" } if api_key.blank?
+      api_config = get_api_config
+      return { error: api_config[:error] } if api_config[:error]
 
       # Check rate limit
       unless DivineRapierAiTranslator::RateLimiter.can_make_request?
@@ -74,7 +74,7 @@ module DivineRapierAiTranslator
       prompt = build_translation_prompt(content, target_language, title)
 
       # Make API call
-      response = make_openai_request(prompt, api_key)
+      response = make_openai_request(prompt, api_config)
 
       # Record the request for rate limiting
       DivineRapierAiTranslator::RateLimiter.record_request
@@ -87,13 +87,14 @@ module DivineRapierAiTranslator
         source_language: response[:source_language] || "auto",
         confidence: response[:confidence] || 0.95,
         provider_info: {
-          model: response[:model] || "gpt-3.5-turbo",
+          model: response[:model] || api_config[:model],
           tokens_used: response[:tokens_used],
-          provider: "openai",
+          provider: api_config[:provider],
         },
       }
     rescue => e
       Rails.logger.error("OpenAI API error: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n")) if e.backtrace
       { error: "Translation service temporarily unavailable" }
     end
 
@@ -209,27 +210,89 @@ module DivineRapierAiTranslator
       end
     end
 
-    def make_openai_request(prompt, api_key)
-      # Support both OpenAI and OpenAI-compatible APIs
-      base_url = determine_openai_base_url
+    def get_api_config
+      preset_model = SiteSetting.divine_rapier_ai_translator_preset_model
+      
+      case preset_model
+      when "gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"
+        api_key = SiteSetting.divine_rapier_ai_translator_openai_api_key
+        return { error: "OpenAI API key not configured" } if api_key.blank?
+        {
+          api_key: api_key,
+          base_url: "https://api.openai.com",
+          model: preset_model,
+          max_tokens: 4096,
+          provider: "openai"
+        }
+      when "grok-2", "grok-3", "grok-4"
+        api_key = SiteSetting.divine_rapier_ai_translator_xai_api_key
+        return { error: "xAI API key not configured" } if api_key.blank?
+        # Map grok-4 to grok-beta, grok-3 to grok-2-1212, grok-2 to grok-2
+        model_mapping = {
+          "grok-4" => "grok-beta",
+          "grok-3" => "grok-2-1212",
+          "grok-2" => "grok-2"
+        }
+        {
+          api_key: api_key,
+          base_url: "https://api.x.ai",
+          model: model_mapping[preset_model],
+          max_tokens: 16000,
+          provider: "xai"
+        }
+      when "deepseek-r1", "deepseek-v3", "deepseek-v2"
+        api_key = SiteSetting.divine_rapier_ai_translator_deepseek_api_key
+        return { error: "DeepSeek API key not configured" } if api_key.blank?
+        # Map model names
+        model_mapping = {
+          "deepseek-r1" => "deepseek-reasoner",
+          "deepseek-v3" => "deepseek-chat",
+          "deepseek-v2" => "deepseek-chat"
+        }
+        {
+          api_key: api_key,
+          base_url: "https://api.deepseek.com",
+          model: model_mapping[preset_model],
+          max_tokens: SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
+          provider: "deepseek"
+        }
+      when "custom"
+        api_key = SiteSetting.divine_rapier_ai_translator_custom_api_key
+        return { error: "Custom API key not configured" } if api_key.blank?
+        base_url = SiteSetting.divine_rapier_ai_translator_custom_base_url
+        return { error: "Custom base URL not configured" } if base_url.blank?
+        model_name = SiteSetting.divine_rapier_ai_translator_custom_model_name
+        return { error: "Custom model name not configured" } if model_name.blank?
+        {
+          api_key: api_key,
+          base_url: base_url,
+          model: model_name,
+          max_tokens: SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
+          provider: "custom"
+        }
+      else
+        { error: "Invalid preset model: #{preset_model}" }
+      end
+    end
 
+    def make_openai_request(prompt, api_config)
       conn =
-        Faraday.new(url: base_url) do |f|
+        Faraday.new(url: api_config[:base_url]) do |f|
           f.request :json
           f.response :json
           f.adapter Faraday.default_adapter
         end
 
       request_body = {
-        model: SiteSetting.divine_rapier_ai_translator_model,
+        model: api_config[:model],
         messages: [{ role: "user", content: prompt }],
-        max_tokens: SiteSetting.divine_rapier_ai_translator_max_tokens,
+        max_tokens: api_config[:max_tokens],
         temperature: 0.3,
       }
 
       response =
         conn.post("/v1/chat/completions") do |req|
-          req.headers["Authorization"] = "Bearer #{api_key}"
+          req.headers["Authorization"] = "Bearer #{api_config[:api_key]}"
           req.headers["Content-Type"] = "application/json"
           req.body = request_body.to_json
         end
@@ -242,14 +305,6 @@ module DivineRapierAiTranslator
     rescue Faraday::Error => e
       Rails.logger.error("Faraday error: #{e.message}")
       { error: "Network error: #{e.message}" }
-    end
-
-    def determine_openai_base_url
-      # Check if using a custom OpenAI-compatible API
-      custom_url = SiteSetting.divine_rapier_ai_translator_openai_base_url
-      return custom_url if custom_url.present?
-
-      "https://api.openai.com"
     end
 
     def parse_openai_response(response_body)

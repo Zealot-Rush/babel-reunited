@@ -27,18 +27,18 @@ RSpec.describe DivineRapierAiTranslator::TranslatePostJob, type: :job do
     it "translates post to target language" do
       expect(DivineRapierAiTranslator::TranslationService).to receive(:new).with(
         post: post,
-        target_language: "zh"
+        target_language: "zh-cn"
       ).and_return(translation_service)
       
       expect(translation_service).to receive(:call).and_return(success_context)
 
-      job.execute(post_id: post.id, target_language: "zh")
+      job.execute(post_id: post.id, target_language: "zh-cn")
     end
 
     it "skips if post_id is blank" do
       expect(DivineRapierAiTranslator::TranslationService).not_to receive(:new)
       
-      job.execute(post_id: nil, target_language: "zh")
+      job.execute(post_id: nil, target_language: "zh-cn")
     end
 
     it "skips if target_language is blank" do
@@ -50,7 +50,7 @@ RSpec.describe DivineRapierAiTranslator::TranslatePostJob, type: :job do
     it "skips if post is not found" do
       expect(DivineRapierAiTranslator::TranslationService).not_to receive(:new)
       
-      job.execute(post_id: 99999, target_language: "zh")
+      job.execute(post_id: 99999, target_language: "zh-cn")
     end
 
     it "skips if post is deleted" do
@@ -58,7 +58,7 @@ RSpec.describe DivineRapierAiTranslator::TranslatePostJob, type: :job do
       
       expect(DivineRapierAiTranslator::TranslationService).not_to receive(:new)
       
-      job.execute(post_id: post.id, target_language: "zh")
+      job.execute(post_id: post.id, target_language: "zh-cn")
     end
 
     it "skips if post is hidden" do
@@ -66,19 +66,19 @@ RSpec.describe DivineRapierAiTranslator::TranslatePostJob, type: :job do
       
       expect(DivineRapierAiTranslator::TranslationService).not_to receive(:new)
       
-      job.execute(post_id: post.id, target_language: "zh")
+      job.execute(post_id: post.id, target_language: "zh-cn")
     end
 
     it "skips if translation already exists" do
       DivineRapierAiTranslator::PostTranslation.create!(
         post: post,
-        language: "zh",
+        language: "zh-cn",
         translated_content: "你好世界"
       )
       
       expect(DivineRapierAiTranslator::TranslationService).not_to receive(:new)
       
-      job.execute(post_id: post.id, target_language: "zh")
+      job.execute(post_id: post.id, target_language: "zh-cn")
     end
 
     it "logs error when translation fails" do
@@ -86,7 +86,7 @@ RSpec.describe DivineRapierAiTranslator::TranslatePostJob, type: :job do
       
       expect(Rails.logger).to receive(:error).with("Translation failed for post #{post.id}: API Error")
       
-      job.execute(post_id: post.id, target_language: "zh")
+      job.execute(post_id: post.id, target_language: "zh-cn")
     end
   end
 end

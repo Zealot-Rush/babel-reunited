@@ -22,6 +22,10 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     processing_time = calculate_processing_time(start_time)
 
     handle_translation_result(result, post_id, target_language, post.topic_id, processing_time, force_update, translation)
+  rescue => e
+    # Handle any unexpected exceptions during translation
+    processing_time = calculate_processing_time(start_time)
+    handle_unexpected_error(e, post_id, target_language, processing_time)
   end
 
   private
@@ -185,6 +189,38 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     )
   end
 
+  def handle_unexpected_error(error, post_id, target_language, processing_time)
+    # Try to find the translation record to update its status
+    translation = DivineRapierAiTranslator::PostTranslation.find_translation(post_id, target_language)
+    
+    if translation.present?
+      translation.update!(
+        status: "failed",
+        metadata: translation.metadata.merge(
+          error: error.message,
+          error_class: error.class.name,
+          failed_at: Time.current,
+        ),
+      )
+      
+      publish_translation_status(post_id, target_language, "failed", error.message, translation.post.topic_id, translation.id)
+    else
+      # If no translation record exists, just publish the status
+      publish_translation_status(post_id, target_language, "failed", error.message)
+    end
+    
+    # Log the error
+    DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+      post_id: post_id,
+      target_language: target_language,
+      error: error,
+      processing_time: processing_time,
+    )
+    
+    Rails.logger.error("Unexpected error in translation job for post #{post_id}: #{error.message}")
+    Rails.logger.error(error.backtrace.join("\n")) if error.backtrace
+  end
+
   private
 
   def publish_translation_status(post_id, target_language, status, error = nil, topic_id = nil, translation_id = nil, translated_content = nil)
@@ -202,7 +238,15 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     # 发布到话题级别的频道
     if topic_id
       channel = "/ai-translator/topic/#{topic_id}"
-      user_ids = Post.find(post_id).topic.allowed_user_ids
+      
+      # Safely get user IDs, handle case where post might not exist
+      begin
+        post = Post.find(post_id)
+        user_ids = post.topic.allowed_user_ids
+      rescue ActiveRecord::RecordNotFound
+        Rails.logger.warn("📡 MessageBus: Post #{post_id} not found, skipping publish")
+        return
+      end
       
       Rails.logger.info("📡 MessageBus: Publishing to topic channel #{channel} with payload: #{payload.inspect}")
       Rails.logger.info("📡 MessageBus: Target user IDs: #{user_ids.inspect}")

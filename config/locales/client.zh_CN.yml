@@ -1,4 +1,9 @@
 zh_CN:
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          divine_rapier_ai_translator: "AI翻译器"
   js:
     divine_rapier_ai_translator:
       preferences:

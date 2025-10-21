@@ -25,8 +25,8 @@ module DivineRapierAiTranslator
       
       return render json: { error: "Target language required" }, status: :bad_request if target_language.blank?
       
-      # 验证语言代码格式
-      unless target_language.match?(/\A[a-z]{2}\z/)
+      # 验证语言代码格式 - 支持 zh-cn 格式
+      unless target_language.match?(/\A[a-z]{2}(-[a-z]{2})?\z/)
         return render json: { error: "Invalid language code format" }, status: :bad_request
       end
 
@@ -74,8 +74,8 @@ module DivineRapierAiTranslator
                           current_user.build_user_preferred_language
       
       if language.present?
-        # Validate language code format
-        unless language.match?(/\A[a-z]{2}\z/)
+        # Validate language code format - 支持 zh-cn 格式
+        unless language.match?(/\A[a-z]{2}(-[a-z]{2})?\z/)
           return render json: { error: "Invalid language code format" }, status: :bad_request
         end
         preferred_language.language = language
