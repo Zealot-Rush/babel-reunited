@@ -8,3 +8,8 @@ es:
         debug_info: "Información de Depuración"
         enable_ai_translation: "Habilitar Traducción IA"
         enabled: "Habilitado"
+      language_preference_modal:
+        title: "Elige tu idioma preferido"
+        description: "Selecciona tu idioma preferido para las traducciones automáticas. Las publicaciones se mostrarán automáticamente en este idioma cuando esté disponible."
+        disable_description: "¿No quieres traducciones automáticas?"
+        disable: "Desactivar traducción automática"

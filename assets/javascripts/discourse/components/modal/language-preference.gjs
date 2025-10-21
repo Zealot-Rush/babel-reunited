@@ -33,6 +33,9 @@ export default class LanguagePreferenceModal extends Component {
       localStorage.setItem("language_preference_tip_shown", "true");
       
       this.modal.close();
+      
+      // 刷新页面以更新用户偏好设置
+      window.location.reload();
 
     } catch (error) {
       popupAjaxError(error);
@@ -57,6 +60,9 @@ export default class LanguagePreferenceModal extends Component {
       localStorage.setItem("language_preference_tip_shown", "true");
       
       this.modal.close();
+      
+      // 刷新页面以更新用户偏好设置
+      window.location.reload();
 
     } catch (error) {
       popupAjaxError(error);

@@ -8,3 +8,8 @@ en:
         debug_info: "Debug Info"
         enable_ai_translation: "Enable AI Translation"
         enabled: "Enabled"
+      language_preference_modal:
+        title: "Choose Your Preferred Language"
+        description: "Select your preferred language for AI-powered translations. Posts will automatically display in this language when available."
+        disable_description: "Don't want AI translations?"
+        disable: "Disable AI Translation"
