@@ -7,18 +7,15 @@ import Component from "@glimmer/component";
 export default class TranslatedTitleComponent extends Component {
   constructor() {
     super(...arguments);
-    console.log("🔍 TranslatedTitleComponent constructor:", this.args);
   }
 
   get topic() {
     const topic = this.args.model || this.args.topic;
-    console.log("🔍 Topic object:", topic);
     return topic;
   }
 
   get translatedTitle() {
     const translatedTitle = this.topic?.translated_title;
-    console.log("🔍 Translated title:", translatedTitle);
     return translatedTitle;
   }
 
@@ -27,7 +24,6 @@ export default class TranslatedTitleComponent extends Component {
            this.translatedTitle && 
            this.translatedTitle !== this.topic.title &&
            this.translatedTitle.length > 0;
-    console.log("🔍 Should show translated title:", shouldShow);
     return shouldShow;
   }
 

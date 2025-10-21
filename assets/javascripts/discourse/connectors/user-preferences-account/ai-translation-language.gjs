@@ -31,10 +31,7 @@ export default class AiTranslationLanguage extends Component {
       });
       this.currentLanguage = response.language || "en";
       this.enabled = response.enabled !== false; // Default to true if not set
-      console.log("🔍 DEBUG: Loaded current language:", this.currentLanguage);
-      console.log("🔍 DEBUG: Loaded enabled status:", this.enabled);
     } catch (error) {
-      console.error("Failed to load current language:", error);
       this.currentLanguage = "en";
       this.enabled = true;
     }
@@ -54,7 +51,6 @@ export default class AiTranslationLanguage extends Component {
 
   @action
   async changeLanguage(language) {
-    console.log("🔍 DEBUG: Changing language to:", language);
     this.saving = true;
     
     try {
@@ -64,7 +60,6 @@ export default class AiTranslationLanguage extends Component {
       });
       
       this.currentLanguage = language;
-      console.log("✅ DEBUG: Language changed successfully to:", language);
       
       // 刷新currentUser数据
       if (this.currentUser) {
@@ -73,7 +68,6 @@ export default class AiTranslationLanguage extends Component {
       }
       
     } catch (error) {
-      console.error("❌ DEBUG: Failed to change language:", error);
       popupAjaxError(error);
     } finally {
       this.saving = false;
@@ -82,7 +76,6 @@ export default class AiTranslationLanguage extends Component {
 
   @action
   async toggleEnabled() {
-    console.log("🔍 DEBUG: Toggling enabled status to:", !this.enabled);
     this.saving = true;
     
     try {
@@ -93,7 +86,6 @@ export default class AiTranslationLanguage extends Component {
       });
       
       this.enabled = newEnabled;
-      console.log("✅ DEBUG: Enabled status changed successfully to:", newEnabled);
       
       // 刷新currentUser数据
       if (this.currentUser) {
@@ -101,7 +93,6 @@ export default class AiTranslationLanguage extends Component {
       }
       
     } catch (error) {
-      console.error("❌ DEBUG: Failed to toggle enabled status:", error);
       popupAjaxError(error);
     } finally {
       this.saving = false;
@@ -156,12 +147,6 @@ export default class AiTranslationLanguage extends Component {
       
       <div class="instructions">
         {{i18n "js.divine_rapier_ai_translator.preferences.ai_translation_language_description"}}
-      </div>
-      
-      <!-- Debug info -->
-      <div class="debug-info" style="margin-top: 10px; font-size: 12px; color: #999;">
-        {{i18n "js.divine_rapier_ai_translator.preferences.current_language"}}: {{this.currentLanguage}} | 
-        {{i18n "js.divine_rapier_ai_translator.preferences.enabled"}}: {{this.enabled}}
       </div>
     </div>
   </template>

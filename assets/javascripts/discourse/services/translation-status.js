@@ -17,10 +17,7 @@ export default class TranslationStatusService extends Service {
   subscribeToTopic(topicId) {
     const channel = `/ai-translator/topic/${topicId}`;
     
-    console.log(`📡 MessageBus: Subscribing to topic channel ${channel} for topic ${topicId}`);
-    
     this.messageBus.subscribe(channel, (data) => {
-      console.log(`📡 MessageBus: Received message on topic channel ${channel}:`, data);
       this.handleTranslationUpdate(data.post_id, data);
     });
   }
@@ -28,15 +25,12 @@ export default class TranslationStatusService extends Service {
   // 订阅帖子的翻译状态更新（保持向后兼容）
   subscribeToPost(postId) {
     // 这个方法现在被弃用，建议使用 subscribeToTopic
-    console.warn(`⚠️ subscribeToPost is deprecated, use subscribeToTopic instead for post ${postId}`);
     // 为了向后兼容，暂时保留但不再使用
   }
   
   // 处理翻译状态更新
   handleTranslationUpdate(postId, data) {
     const { target_language, status, error, translation_id, translated_content } = data;
-    
-    console.log(`🔄 Translation status update for post ${postId}, language ${target_language}, status: ${status}`);
     
     // 更新状态
     if (!this.translationStates.has(postId)) {
@@ -61,8 +55,6 @@ export default class TranslationStatusService extends Service {
       translationId: translation_id,
       translatedContent: translated_content
     });
-    
-    console.log(`📢 Triggered translation:status-changed event for post ${postId}`);
     
     // 显示用户通知
     this.showUserNotification(target_language, status, error);
@@ -116,13 +108,11 @@ export default class TranslationStatusService extends Service {
   unsubscribeFromTopic(topicId) {
     const channel = `/ai-translator/topic/${topicId}`;
     this.messageBus.unsubscribe(channel);
-    console.log(`📡 MessageBus: Unsubscribed from topic channel ${channel}`);
   }
   
   // 取消订阅帖子（保持向后兼容）
   unsubscribeFromPost(postId) {
     // 这个方法现在被弃用，建议使用 unsubscribeFromTopic
-    console.warn(`⚠️ unsubscribeFromPost is deprecated, use unsubscribeFromTopic instead for post ${postId}`);
     // 为了向后兼容，暂时保留但不再使用
   }
 }
