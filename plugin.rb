@@ -10,6 +10,8 @@
 
 enabled_site_setting :divine_rapier_ai_translator_enabled
 
+register_asset "stylesheets/translated-title.scss"
+
 module ::DivineRapierAiTranslator
   PLUGIN_NAME = "divine-rapier-ai-translator"
 end
@@ -123,6 +125,82 @@ after_initialize do
 
   add_to_serializer(:current_user, :preferred_language_enabled, include_condition: -> { true }) do
     object.user_preferred_language&.enabled
+  end
+
+  # Add translated title to Topic serializers
+  add_to_serializer(:topic_view, :translated_title, include_condition: -> { 
+    SiteSetting.divine_rapier_ai_translator_enabled && 
+    scope&.user&.user_preferred_language&.enabled != false &&
+    scope&.user&.user_preferred_language&.language.present?
+  }) do
+    user_preferred_language = scope.user.user_preferred_language
+    return nil unless user_preferred_language&.enabled && user_preferred_language.language.present?
+    
+    # Get the first post's translation for the topic title
+    first_post = object.topic.first_post
+    return nil unless first_post
+    
+    translation = DivineRapierAiTranslator::PostTranslation.find_translation(
+      first_post.id, 
+      user_preferred_language.language
+    )
+    
+    # Only return translated title if it exists and is completed
+    if translation&.completed? && translation.translated_title.present?
+      translation.translated_title
+    else
+      nil
+    end
+  end
+
+  # Also add to listable topics for topic lists
+  add_to_serializer(:listable_topic, :translated_title, include_condition: -> { 
+    SiteSetting.divine_rapier_ai_translator_enabled && 
+    scope&.user&.user_preferred_language&.enabled != false &&
+    scope&.user&.user_preferred_language&.language.present?
+  }) do
+    user_preferred_language = scope.user.user_preferred_language
+    return nil unless user_preferred_language&.enabled && user_preferred_language.language.present?
+    
+    first_post = object.first_post
+    return nil unless first_post
+    
+    translation = DivineRapierAiTranslator::PostTranslation.find_translation(
+      first_post.id, 
+      user_preferred_language.language
+    )
+    
+    # Only return translated title if it exists and is completed
+    if translation&.completed? && translation.translated_title.present?
+      translation.translated_title
+    else
+      nil
+    end
+  end
+
+  # Add to topic list item serializer for topic lists
+  add_to_serializer(:topic_list_item, :translated_title, include_condition: -> { 
+    SiteSetting.divine_rapier_ai_translator_enabled && 
+    scope&.user&.user_preferred_language&.enabled != false &&
+    scope&.user&.user_preferred_language&.language.present?
+  }) do
+    user_preferred_language = scope.user.user_preferred_language
+    return nil unless user_preferred_language&.enabled && user_preferred_language.language.present?
+    
+    first_post = object.first_post
+    return nil unless first_post
+    
+    translation = DivineRapierAiTranslator::PostTranslation.find_translation(
+      first_post.id, 
+      user_preferred_language.language
+    )
+    
+    # Only return translated title if it exists and is completed
+    if translation&.completed? && translation.translated_title.present?
+      translation.translated_title
+    else
+      nil
+    end
   end
 
   # Event handlers for automatic translation
