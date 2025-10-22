@@ -4,12 +4,6 @@ module DivineRapierAiTranslator
   module PostExtension
     extend ActiveSupport::Concern
 
-    included do
-      has_many :post_translations,
-               class_name: "DivineRapierAiTranslator::PostTranslation",
-               dependent: :destroy
-    end
-
     def translate_to_language(target_language, force_update: false)
       DivineRapierAiTranslator::TranslationService.new(
         post: self,
@@ -36,7 +30,7 @@ module DivineRapierAiTranslator
       target_languages.each do |language|
         # Always enqueue translation job - no skipping based on existing translations
         Jobs.enqueue(
-          :translate_post,
+          Jobs::DivineRapierAiTranslator::TranslatePostJob,
           post_id: id,
           target_language: language,
           force_update: force_update,
@@ -44,10 +38,36 @@ module DivineRapierAiTranslator
       end
     end
 
-    def enqueue_batch_translation(target_languages)
-      return if target_languages.blank?
-
-      Jobs.enqueue(:batch_translate_posts, post_ids: [id], target_languages: target_languages)
+    def create_or_update_translation_record(target_language)
+      existing_translation = DivineRapierAiTranslator::PostTranslation.find_translation(id, target_language)
+      
+      if existing_translation.present?
+        # Update existing translation with "translating" status and empty content
+        existing_translation.update!(
+          status: "translating",
+          translated_content: "",
+          translated_title: "",
+          metadata: existing_translation.metadata.merge(
+            translating_started_at: Time.current,
+            updated_at: Time.current,
+          ),
+        )
+        existing_translation
+      else
+        # Create new translation with "translating" status and empty content
+        DivineRapierAiTranslator::PostTranslation.create!(
+          post: self,
+          language: target_language,
+          status: "translating",
+          translated_content: "",
+          translated_title: "",
+          translation_provider: "openai",
+          metadata: {
+            translating_started_at: Time.current,
+          },
+        )
+      end
     end
+
   end
 end

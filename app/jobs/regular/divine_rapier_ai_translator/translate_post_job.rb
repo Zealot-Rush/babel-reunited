@@ -12,8 +12,11 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     post = find_and_validate_post(post_id, target_language)
     return unless post
 
-    # Create or update translation record with "translating" status
-    translation = create_or_update_translation_record(post, target_language)
+    # Find existing translation record (should already be created by event handler)
+    translation = post.get_translation(target_language)
+    
+    # If translation record doesn't exist, create it (fallback for manual job execution)
+    translation ||= post.create_or_update_translation_record(target_language)
     
     log_translation_start(post_id, target_language, post, force_update)
 
@@ -50,35 +53,12 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     post
   end
 
-  def create_or_update_translation_record(post, target_language)
-    existing_translation = DivineRapierAiTranslator::PostTranslation.find_translation(post.id, target_language)
-    
-    if existing_translation.present?
-      # Update existing translation with "translating" status and empty content
-      existing_translation.update!(
-        status: "translating",
-        translated_content: "",
-        translated_title: "",
-        metadata: existing_translation.metadata.merge(
-          translating_started_at: Time.current,
-          updated_at: Time.current,
-        ),
-      )
-      existing_translation
-    else
-      # Create new translation with "translating" status and empty content
-      DivineRapierAiTranslator::PostTranslation.create!(
-        post: post,
-        language: target_language,
-        status: "translating",
-        translated_content: "",
-        translated_title: "",
-        translation_provider: "openai",
-        metadata: {
-          translating_started_at: Time.current,
-        },
-      )
-    end
+  def handle_post_deleted_or_hidden(post_id, target_language, topic_id)
+    DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
+      post_id: post_id,
+      target_language: target_language,
+      reason: "post_deleted_or_hidden",
+    )
   end
 
   def handle_post_not_found(post_id, target_language)
@@ -86,14 +66,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
       post_id: post_id,
       target_language: target_language,
       reason: "post_not_found",
-    )
-  end
-
-  def handle_post_deleted_or_hidden(post_id, target_language, topic_id)
-    DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
-      post_id: post_id,
-      target_language: target_language,
-      reason: "post_deleted_or_hidden",
     )
   end
 

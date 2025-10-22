@@ -21,12 +21,12 @@ require_relative "lib/divine_rapier_ai_translator/engine"
 # Load models BEFORE after_initialize
 require_relative "app/models/divine_rapier_ai_translator/post_translation"
 require_relative "app/models/divine_rapier_ai_translator/user_preferred_language"
+require_relative "lib/divine_rapier_ai_translator/post_extension"
 
 after_initialize do
   # Load other required files
   require_relative "app/services/divine_rapier_ai_translator/translation_service"
   require_relative "app/jobs/regular/divine_rapier_ai_translator/translate_post_job"
-  require_relative "app/jobs/regular/divine_rapier_ai_translator/batch_translate_posts_job"
   require_relative "app/controllers/divine_rapier_ai_translator/translations_controller"
   require_relative "app/controllers/divine_rapier_ai_translator/admin_controller"
   require_relative "app/serializers/divine_rapier_ai_translator/post_translation_serializer"
@@ -40,58 +40,17 @@ after_initialize do
 
   # Extend Post model with translation functionality
   reloadable_patch do
-    Post.class_eval do
+    Post.class_eval do # rubocop:disable Discourse/Plugins/NoMonkeyPatching
       has_many :post_translations,
                class_name: "DivineRapierAiTranslator::PostTranslation",
                dependent: :destroy
-
-      def translate_to_language(target_language)
-        DivineRapierAiTranslator::TranslationService.new(
-          post: self,
-          target_language: target_language,
-        ).call
-      end
-
-      def get_translation(language)
-        post_translations.find_by(language: language)
-      end
-
-      def has_translation?(language)
-        post_translations.exists?(language: language)
-      end
-
-      def available_translations
-        post_translations.pluck(:language)
-      end
-
-      def enqueue_translation_jobs(target_languages, force_update: false)
-        return if target_languages.blank?
-
-        target_languages.each do |language|
-          # Always enqueue translation job - no skipping based on existing translations
-          Jobs.enqueue(
-            Jobs::DivineRapierAiTranslator::TranslatePostJob,
-            post_id: id,
-            target_language: language,
-            force_update: force_update,
-          )
-        end
-      end
-
-      def enqueue_batch_translation(target_languages)
-        return if target_languages.blank?
-
-        Jobs.enqueue(
-          Jobs::DivineRapierAiTranslator::BatchTranslatePostsJob,
-          post_ids: [id],
-          target_languages: target_languages,
-        )
-      end
+      
+      prepend DivineRapierAiTranslator::PostExtension
     end
   end
 
   reloadable_patch do
-    User.class_eval do
+    User.class_eval do # rubocop:disable Discourse/Plugins/NoMonkeyPatching
       has_one :user_preferred_language,
               class_name: "DivineRapierAiTranslator::UserPreferredLanguage",
               dependent: :destroy
@@ -211,6 +170,12 @@ after_initialize do
     auto_translate_languages = SiteSetting.divine_rapier_ai_translator_auto_translate_languages
     if auto_translate_languages.present?
       languages = auto_translate_languages.split(",").map(&:strip)
+      
+      # Pre-create translation records to show "translating" status immediately
+      languages.each do |language|
+        post.create_or_update_translation_record(language)
+      end
+      
       post.enqueue_translation_jobs(languages)
     end
   end
@@ -221,7 +186,14 @@ after_initialize do
 
     # Re-translate existing translations when post is edited
     existing_languages = post.available_translations
-    post.enqueue_translation_jobs(existing_languages, force_update: true) if existing_languages.any?
+    if existing_languages.any?
+      # Pre-update translation records to show "translating" status immediately
+      existing_languages.each do |language|
+        post.create_or_update_translation_record(language)
+      end
+      
+      post.enqueue_translation_jobs(existing_languages, force_update: true)
+    end
   end
 
   on(:post_destroyed) do |post|
