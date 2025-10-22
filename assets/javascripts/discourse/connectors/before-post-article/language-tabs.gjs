@@ -26,8 +26,14 @@ export default class LanguageTabsConnector extends Component {
     const baseStyle =
       "padding: 4px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; height: 24px; line-height: 1;";
 
-    // 检查语言是否可用
-    const isAvailable = this.isLanguageAvailable(languageCode);
+    // 获取翻译状态
+    let status = "";
+    if (this.post?.post_translations) {
+      const translation = this.post.post_translations.find(
+        (t) => t.post_translation?.language === languageCode
+      );
+      status = translation?.post_translation?.status || "";
+    }
 
     if (this.currentLanguage === languageCode) {
       // 当前选中的语言：蓝色背景，白色文字
@@ -35,14 +41,14 @@ export default class LanguageTabsConnector extends Component {
         baseStyle +
         " background: #007bff; color: white; border: 1px solid #007bff;"
       );
-    } else if (isAvailable) {
-      // 有翻译的：白底，蓝字，蓝框
+    } else if (status === "completed") {
+      // 完成状态的翻译：白底，蓝字，蓝框
       return (
         baseStyle +
         " background: white; color: #007bff; border: 1px solid #007bff;"
       );
     } else {
-      // 没有翻译的：白底，灰字，灰框
+      // 其他所有状态：白底，灰字，灰框
       return (
         baseStyle +
         " background: white; color: #6c757d; border: 1px solid #6c757d; cursor: pointer; opacity: 0.8;"
@@ -73,7 +79,7 @@ export default class LanguageTabsConnector extends Component {
 
   /**
    * 初始化用户的偏好语言选择
-   * 如果用户设置了偏好语言且该语言在可用翻译中，则自动选择
+   * 如果用户设置了偏好语言且该语言翻译已完成，则自动选择
    * 如果用户禁用了AI翻译功能，则不进行自动选择
    */
   initializePreferredLanguage() {
@@ -89,10 +95,17 @@ export default class LanguageTabsConnector extends Component {
 
     const preferredLanguage = this.currentUser.preferred_language;
 
-    // 检查偏好语言是否在可用翻译中
-    const availableLanguages = this.availableLanguages;
+    // 检查偏好语言的翻译状态
+    let status = "";
+    if (this.post?.post_translations) {
+      const translation = this.post.post_translations.find(
+        (t) => t.post_translation?.language === preferredLanguage
+      );
+      status = translation?.post_translation?.status || "";
+    }
 
-    if (availableLanguages.includes(preferredLanguage)) {
+    // 只有当翻译状态是完成状态时才自动选择
+    if (status === "completed") {
       this.currentLanguage = preferredLanguage;
     }
   }
@@ -119,11 +132,28 @@ export default class LanguageTabsConnector extends Component {
     // 获取所有支持的语言（包括可用的和不可用的）
     const supportedLanguages = ["en", "zh-cn", "es"];
 
-    const result = supportedLanguages.map((code) => ({
-      code,
-      name: LanguageTabsConnector.languageMap[code] || code,
-      available: this.isLanguageAvailable(code),
-    }));
+    const result = supportedLanguages.map((code) => {
+      const name = LanguageTabsConnector.languageMap[code] || code;
+      const available = this.isLanguageAvailable(code);
+
+      // 获取翻译状态
+      let status = "";
+      if (this.post?.post_translations) {
+        const translation = this.post.post_translations.find(
+          (t) => t.post_translation?.language === code
+        );
+        status = translation?.post_translation?.status || "";
+      }
+
+      return {
+        code,
+        name,
+        available,
+        status,
+        displayText:
+          status && status !== "completed" ? `${name} (${status})` : name,
+      };
+    });
 
     return result;
   }
@@ -169,11 +199,29 @@ export default class LanguageTabsConnector extends Component {
   // 切换语言的方法
   @action
   async switchLanguage(languageCode) {
-    // 如果语言可用，直接切换
-    if (this.isLanguageAvailable(languageCode)) {
+    // 如果选择的是原始内容，直接切换
+    if (languageCode === "original") {
       this.currentLanguage = languageCode;
       return;
     }
+
+    // 获取翻译状态
+    let status = "";
+    if (this.post?.post_translations) {
+      const translation = this.post.post_translations.find(
+        (t) => t.post_translation?.language === languageCode
+      );
+      status = translation?.post_translation?.status || "";
+    }
+
+    // 如果翻译状态是完成状态，可以切换
+    if (status === "completed") {
+      this.currentLanguage = languageCode;
+      return;
+    }
+
+    // 如果翻译状态不是完成状态，选择Raw
+    this.currentLanguage = "original";
   }
 
   // 新增：获取语言名称的辅助方法
@@ -210,7 +258,7 @@ export default class LanguageTabsConnector extends Component {
               "Click to start translation for {{langInfo.name}}"
             }}
           >
-            {{langInfo.name}}
+            {{langInfo.displayText}}
           </button>
         {{/each}}
       </div>
