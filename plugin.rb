@@ -241,7 +241,7 @@ after_initialize do
   end
 
   # Add admin route
-  add_admin_route "admin.site_settings.categories.divine_rapier_ai_translator", "ai-translator", use_new_show_route: true
+  add_admin_route "divine_rapier_ai_translator.title", "divine-rapier-ai-translator", use_new_show_route: true
 
   # Register frontend widgets and components
   register_asset "stylesheets/translation-widgets.scss"

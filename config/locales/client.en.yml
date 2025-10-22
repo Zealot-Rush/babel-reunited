@@ -4,6 +4,8 @@ en:
       site_settings:
         categories:
           divine_rapier_ai_translator: "AI Translator"
+  divine_rapier_ai_translator:
+    title: "AI Translator"
   js:
     divine_rapier_ai_translator:
       preferences:

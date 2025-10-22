@@ -15,7 +15,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     # Create or update translation record with "translating" status
     translation = create_or_update_translation_record(post, target_language)
     
-    notify_translation_started(post_id, target_language, post.topic_id, translation.id)
     log_translation_start(post_id, target_language, post, force_update)
 
     result = execute_translation_service(post, target_language, force_update)
@@ -83,7 +82,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
   end
 
   def handle_post_not_found(post_id, target_language)
-    publish_translation_status(post_id, target_language, "failed", "post_not_found")
     DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
       post_id: post_id,
       target_language: target_language,
@@ -92,7 +90,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
   end
 
   def handle_post_deleted_or_hidden(post_id, target_language, topic_id)
-    publish_translation_status(post_id, target_language, "failed", "post_deleted_or_hidden", topic_id)
     DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
       post_id: post_id,
       target_language: target_language,
@@ -100,9 +97,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     )
   end
 
-  def notify_translation_started(post_id, target_language, topic_id, translation_id)
-    publish_translation_status(post_id, target_language, "started", nil, topic_id, translation_id)
-  end
 
   def log_translation_start(post_id, target_language, post, force_update)
     DivineRapierAiTranslator::TranslationLogger.log_translation_start(
@@ -143,7 +137,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
       ),
     )
     
-    publish_translation_status(post_id, target_language, "failed", result.error, topic_id, translation.id)
     DivineRapierAiTranslator::TranslationLogger.log_translation_error(
       post_id: post_id,
       target_language: target_language,
@@ -166,16 +159,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
         translated_at: Time.current,
         completed_at: Time.current,
       ),
-    )
-    
-    publish_translation_status(
-      post_id, 
-      target_language, 
-      "completed", 
-      nil, 
-      topic_id,
-      translation.id,
-      translation.translated_content
     )
     
     ai_response = result.ai_response || {}
@@ -202,11 +185,6 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
           failed_at: Time.current,
         ),
       )
-      
-      publish_translation_status(post_id, target_language, "failed", error.message, translation.post.topic_id, translation.id)
-    else
-      # If no translation record exists, just publish the status
-      publish_translation_status(post_id, target_language, "failed", error.message)
     end
     
     # Log the error
@@ -219,43 +197,5 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     
     Rails.logger.error("Unexpected error in translation job for post #{post_id}: #{error.message}")
     Rails.logger.error(error.backtrace.join("\n")) if error.backtrace
-  end
-
-  private
-
-  def publish_translation_status(post_id, target_language, status, error = nil, topic_id = nil, translation_id = nil, translated_content = nil)
-    payload = {
-      post_id: post_id,
-      target_language: target_language,
-      status: status,
-      timestamp: Time.current.iso8601
-    }
-    
-    payload[:error] = error if error
-    payload[:translation_id] = translation_id if translation_id
-    payload[:translated_content] = translated_content if translated_content
-
-    # 发布到话题级别的频道
-    if topic_id
-      channel = "/ai-translator/topic/#{topic_id}"
-      
-      # Safely get user IDs, handle case where post might not exist
-      begin
-        post = Post.find(post_id)
-        user_ids = post.topic.allowed_user_ids
-      rescue ActiveRecord::RecordNotFound
-        Rails.logger.warn("📡 MessageBus: Post #{post_id} not found, skipping publish")
-        return
-      end
-      
-      Rails.logger.info("📡 MessageBus: Publishing to topic channel #{channel} with payload: #{payload.inspect}")
-      Rails.logger.info("📡 MessageBus: Target user IDs: #{user_ids.inspect}")
-      
-      MessageBus.publish(channel, payload, user_ids: user_ids)
-      
-      Rails.logger.info("📡 MessageBus: Published successfully to topic channel")
-    else
-      Rails.logger.warn("📡 MessageBus: No topic_id provided, skipping publish")
-    end
   end
 end

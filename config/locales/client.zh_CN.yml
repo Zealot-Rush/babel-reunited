@@ -4,6 +4,8 @@ zh_CN:
       site_settings:
         categories:
           divine_rapier_ai_translator: "AI翻译器"
+  divine_rapier_ai_translator:
+    title: "AI翻译器"
   js:
     divine_rapier_ai_translator:
       preferences:
