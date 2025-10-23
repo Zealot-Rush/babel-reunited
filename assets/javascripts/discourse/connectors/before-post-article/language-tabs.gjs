@@ -18,7 +18,7 @@ export default class LanguageTabsConnector extends Component {
     es: "Español",
   };
   @service currentUser;
-
+  @service messageBus;
   @tracked currentLanguage = "original";
 
   // 获取按钮样式 - 使用箭头函数保持this上下文
@@ -35,25 +35,19 @@ export default class LanguageTabsConnector extends Component {
       status = translation?.post_translation?.status || "";
     }
 
+    let styleString;
     if (this.currentLanguage === languageCode) {
       // 当前选中的语言：蓝色背景，白色文字
-      return (
-        baseStyle +
-        " background: #007bff; color: white; border: 1px solid #007bff;"
-      );
+      styleString = baseStyle + " background: #007bff; color: white; border: 1px solid #007bff;";
     } else if (status === "completed") {
       // 完成状态的翻译：白底，蓝字，蓝框
-      return (
-        baseStyle +
-        " background: white; color: #007bff; border: 1px solid #007bff;"
-      );
+      styleString = baseStyle + " background: white; color: #007bff; border: 1px solid #007bff;";
     } else {
       // 其他所有状态：白底，灰字，灰框
-      return (
-        baseStyle +
-        " background: white; color: #6c757d; border: 1px solid #6c757d; cursor: pointer; opacity: 0.8;"
-      );
+      styleString = baseStyle + " background: white; color: #6c757d; border: 1px solid #6c757d; cursor: pointer; opacity: 0.8;";
     }
+
+    return htmlSafe(styleString);
   };
 
   // 检查语言是否可用
@@ -70,6 +64,41 @@ export default class LanguageTabsConnector extends Component {
 
     // 自动选择用户的偏好语言
     this.initializePreferredLanguage();
+
+    if (!!this.messageBus) {
+      this.messageBus.subscribe(`/post-translations/${this.post.id}`, (data) => {
+        console.log("Translation completed:", data);
+        
+        // 更新 this.post 对象
+        if (data.status === "completed" && data.translation) {
+          this.updatePostTranslation(data.language, data.translation);
+        }
+      })
+    }
+  }
+
+  // 更新 post 对象的翻译数据
+  updatePostTranslation(language, translationData) {
+    if (!this.post.post_translations) {
+      this.post.post_translations = [];
+    }
+    
+    const existingIndex = this.post.post_translations.findIndex(
+      t => t.post_translation?.language === language
+    );
+    
+    if (existingIndex >= 0) {
+      // 更新现有翻译
+      this.post.post_translations[existingIndex].post_translation = {
+        ...this.post.post_translations[existingIndex].post_translation,
+        ...translationData
+      };
+    } else {
+      // 添加新翻译
+      this.post.post_translations.push({
+        post_translation: translationData
+      });
+    }
   }
 
   // 检查用户是否禁用了AI翻译功能

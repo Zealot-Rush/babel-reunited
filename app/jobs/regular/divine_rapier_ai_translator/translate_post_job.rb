@@ -142,6 +142,31 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
       processing_time: processing_time,
       force_update: force_update,
     )
+    
+    # Push completion notification via MessageBus
+    MessageBus.publish(
+      "/post-translations/#{post_id}",
+      {
+        post_id: post_id,
+        language: target_language,
+        status: "completed",
+        completed_at: Time.current,
+        # 推送完整的翻译数据
+        translation: {
+          language: target_language,
+          translated_content: result.translation.translated_content,
+          translated_title: result.translation.translated_title,
+          source_language: result.translation.source_language,
+          status: "completed",
+          metadata: {
+            confidence: result.ai_response[:confidence],
+            provider_info: result.ai_response[:provider_info],
+            translated_at: Time.current,
+            completed_at: Time.current,
+          }
+        }
+      }
+    )
   end
 
   def handle_unexpected_error(error, post_id, target_language, processing_time)

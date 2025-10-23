@@ -10,7 +10,6 @@ export default {
 
   initialize() {
     withPluginApi((api) => {
-
       // 使用 renderInOutlet 替换 post-content-cooked-html outlet
       // 现在总是渲染，让组件内部决定是否显示按钮
       api.renderInOutlet(
