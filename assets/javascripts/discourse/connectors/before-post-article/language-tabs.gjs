@@ -19,12 +19,34 @@ export default class LanguageTabsConnector extends Component {
   };
   @service currentUser;
   @service messageBus;
+
   @tracked currentLanguage = "original";
+  @tracked translationsVersion = 0; // 用于强制更新UI
 
   // 获取按钮样式 - 使用箭头函数保持this上下文
   getButtonStyle = (languageCode) => {
+    // 读取 translationsVersion 以确保在翻译更新时重新计算
+    this.translationsVersion;
+
     const baseStyle =
       "padding: 4px 16px; border-radius: 3px; cursor: pointer; font-size: 12px; height: 24px; line-height: 1;";
+
+    // Raw按钮永远保持蓝色样式
+    if (languageCode === "original") {
+      if (this.currentLanguage === "original") {
+        // 当前选中的Raw：蓝色背景，白色文字
+        return htmlSafe(
+          baseStyle +
+            " background: #007bff; color: white; border: 1px solid #007bff;"
+        );
+      } else {
+        // 未选中的Raw：白底，蓝字，蓝框
+        return htmlSafe(
+          baseStyle +
+            " background: white; color: #007bff; border: 1px solid #007bff;"
+        );
+      }
+    }
 
     // 获取翻译状态
     let status = "";
@@ -38,13 +60,19 @@ export default class LanguageTabsConnector extends Component {
     let styleString;
     if (this.currentLanguage === languageCode) {
       // 当前选中的语言：蓝色背景，白色文字
-      styleString = baseStyle + " background: #007bff; color: white; border: 1px solid #007bff;";
+      styleString =
+        baseStyle +
+        " background: #007bff; color: white; border: 1px solid #007bff;";
     } else if (status === "completed") {
       // 完成状态的翻译：白底，蓝字，蓝框
-      styleString = baseStyle + " background: white; color: #007bff; border: 1px solid #007bff;";
+      styleString =
+        baseStyle +
+        " background: white; color: #007bff; border: 1px solid #007bff;";
     } else {
       // 其他所有状态：白底，灰字，灰框
-      styleString = baseStyle + " background: white; color: #6c757d; border: 1px solid #6c757d; cursor: pointer; opacity: 0.8;";
+      styleString =
+        baseStyle +
+        " background: white; color: #6c757d; border: 1px solid #6c757d; cursor: pointer; opacity: 0.8;";
     }
 
     return htmlSafe(styleString);
@@ -52,6 +80,9 @@ export default class LanguageTabsConnector extends Component {
 
   // 检查语言是否可用
   isLanguageAvailable = (languageCode) => {
+    // 读取 translationsVersion 以确保在翻译更新时重新计算
+    this.translationsVersion;
+
     if (languageCode === "original") {
       return true; // 原始内容总是可用的
     }
@@ -65,15 +96,16 @@ export default class LanguageTabsConnector extends Component {
     // 自动选择用户的偏好语言
     this.initializePreferredLanguage();
 
-    if (!!this.messageBus) {
-      this.messageBus.subscribe(`/post-translations/${this.post.id}`, (data) => {
-        console.log("Translation completed:", data);
-        
-        // 更新 this.post 对象
-        if (data.status === "completed" && data.translation) {
-          this.updatePostTranslation(data.language, data.translation);
+    if (this.messageBus) {
+      this.messageBus.subscribe(
+        `/post-translations/${this.post.id}`,
+        (data) => {
+          // 更新 this.post 对象
+          if (data.status === "completed" && data.translation) {
+            this.updatePostTranslation(data.language, data.translation);
+          }
         }
-      })
+      );
     }
   }
 
@@ -82,23 +114,26 @@ export default class LanguageTabsConnector extends Component {
     if (!this.post.post_translations) {
       this.post.post_translations = [];
     }
-    
+
     const existingIndex = this.post.post_translations.findIndex(
-      t => t.post_translation?.language === language
+      (t) => t.post_translation?.language === language
     );
-    
+
     if (existingIndex >= 0) {
       // 更新现有翻译
       this.post.post_translations[existingIndex].post_translation = {
         ...this.post.post_translations[existingIndex].post_translation,
-        ...translationData
+        ...translationData,
       };
     } else {
       // 添加新翻译
       this.post.post_translations.push({
-        post_translation: translationData
+        post_translation: translationData,
       });
     }
+
+    // 触发UI更新：增加版本号以通知所有依赖translationsVersion的getter重新计算
+    this.translationsVersion++;
   }
 
   // 检查用户是否禁用了AI翻译功能
@@ -144,6 +179,9 @@ export default class LanguageTabsConnector extends Component {
   }
 
   get availableLanguages() {
+    // 读取 translationsVersion 以确保在翻译更新时重新计算
+    this.translationsVersion;
+
     // 从 post_translations 获取已存在的翻译
     let languages = [];
     if (this.post?.post_translations) {
@@ -158,6 +196,9 @@ export default class LanguageTabsConnector extends Component {
   }
 
   get languageNames() {
+    // 读取 translationsVersion 以确保在翻译更新时重新计算
+    this.translationsVersion;
+
     // 获取所有支持的语言（包括可用的和不可用的）
     const supportedLanguages = ["en", "zh-cn", "es"];
 
