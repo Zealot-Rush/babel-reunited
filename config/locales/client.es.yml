@@ -3,9 +3,11 @@ es:
     admin:
       site_settings:
         categories:
-          divine_rapier_ai_translator: "Traductor IA"
+          babel_reunited: "Babel Reunited"
+  babel_reunited:
+    title: "Babel Reunited"
   js:
-    divine_rapier_ai_translator:
+    babel_reunited:
       preferences:
         ai_translation_language: "Idioma de Traducción IA"
         ai_translation_language_description: "Elige tu idioma preferido para las traducciones automáticas de publicaciones. Las publicaciones se mostrarán automáticamente en este idioma cuando esté disponible."

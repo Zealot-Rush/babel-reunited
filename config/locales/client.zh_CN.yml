@@ -3,11 +3,11 @@ zh_CN:
     admin:
       site_settings:
         categories:
-          divine_rapier_ai_translator: "AI翻译器"
-  divine_rapier_ai_translator:
-    title: "AI翻译器"
+          babel_reunited: "Babel Reunited"
+  babel_reunited:
+    title: "Babel Reunited"
   js:
-    divine_rapier_ai_translator:
+    babel_reunited:
       preferences:
         ai_translation_language: "AI翻译语言"
         ai_translation_language_description: "选择您偏好的AI翻译语言。当帖子有该语言的翻译时，将自动显示翻译版本。"

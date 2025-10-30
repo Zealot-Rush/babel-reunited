@@ -3,11 +3,11 @@ en:
     admin:
       site_settings:
         categories:
-          divine_rapier_ai_translator: "AI Translator"
-  divine_rapier_ai_translator:
-    title: "AI Translator"
+          babel_reunited: "Babel Reunited"
+  babel_reunited:
+    title: "Babel Reunited"
   js:
-    divine_rapier_ai_translator:
+    babel_reunited:
       preferences:
         ai_translation_language: "AI Translation Language"
         ai_translation_language_description: "Choose your preferred language for AI-powered post translations. Posts will automatically display in this language when available."

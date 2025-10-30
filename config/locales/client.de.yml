@@ -3,9 +3,11 @@ de:
     admin:
       site_settings:
         categories:
-          divine_rapier_ai_translator: "KI-Übersetzer"
+          babel_reunited: "Babel Reunited"
+  babel_reunited:
+    title: "Babel Reunited"
   js:
-    divine_rapier_ai_translator:
+    babel_reunited:
       title: "KI-Übersetzer"
       translate: "Übersetzen"
       translating: "Übersetze..."
@@ -34,5 +36,3 @@ de:
         language_english: "English"
         language_chinese: "中文"
         language_spanish: "Español"
-  ai_translator:
-    title: "KI-Übersetzer"
