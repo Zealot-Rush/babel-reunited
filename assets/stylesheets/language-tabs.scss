@@ -1,4 +1,10 @@
 // Language tabs component styles
+.ai-language-tabs .loading-icon,
+.ai-language-tabs .d-icon-spinner {
+  display: inline-block;
+  margin-left: 6px;
+  animation: rotate-forever 1s linear infinite;
+}
 .language-tabs-container {
   margin: 15px 0;
   padding: 0;

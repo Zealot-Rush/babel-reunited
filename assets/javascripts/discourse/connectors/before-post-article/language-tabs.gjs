@@ -5,6 +5,8 @@ import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import { htmlSafe } from "@ember/template";
+import icon from "discourse/helpers/d-icon";
+import { eq } from "truth-helpers";
 
 /**
  * Simple language tabs connector component
@@ -309,6 +311,7 @@ export default class LanguageTabsConnector extends Component {
       </div>
     {{else}}
       <div
+        class="ai-language-tabs"
         style="display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; margin-left: 12px;"
       >
         <button
@@ -328,7 +331,10 @@ export default class LanguageTabsConnector extends Component {
               "Click to start translation for {{langInfo.name}}"
             }}
           >
-            {{langInfo.displayText}}
+            {{langInfo.name}}
+            {{#if (eq langInfo.status "translating")}}
+              {{icon "spinner" class="loading-icon"}}
+            {{/if}}
           </button>
         {{/each}}
       </div>
