@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 # Translation Log Viewer
-# Usage: ruby plugins/divine-rapier-ai-translator/view_translation_logs.rb [options]
+# Usage: ruby plugins/babel-reunited/view_translation_logs.rb [options]
 # Options:
 #   --tail N    Show last N lines (default: 20)
 #   --filter EVENT_TYPE    Filter by event type (started, completed, failed, skipped)
@@ -13,7 +13,7 @@ require 'json'
 require 'optparse'
 
 class TranslationLogViewer
-  LOG_FILE_PATH = "/home/soloara/works/discourse/log/ai_translation.log"
+  LOG_FILE_PATH = "/home/soloara/works/discourse/log/babel_reunited_translation.log"
   
   def initialize
     @options = {}

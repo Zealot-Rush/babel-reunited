@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class ModelConfig
     PRESET_MODELS = {
       # OpenAI Models
@@ -10,7 +10,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.openai.com",
         max_tokens: 128_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        api_key_setting: :babel_reunited_openai_api_key,
         description: "OpenAI next-generation flagship model",
         tier: "High",
       },
@@ -20,7 +20,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.openai.com",
         max_tokens: 128_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        api_key_setting: :babel_reunited_openai_api_key,
         description: "OpenAI GPT-5 cost-effective variant",
         tier: "Medium",
       },
@@ -30,7 +30,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.openai.com",
         max_tokens: 16_385,
         max_output_tokens: 4_096,
-        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        api_key_setting: :babel_reunited_openai_api_key,
         description: "OpenAI GPT-5 lightweight variant for speed and cost",
         tier: "Low",
       },
@@ -40,7 +40,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.openai.com",
         max_tokens: 128_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        api_key_setting: :babel_reunited_openai_api_key,
         description: "OpenAI latest flagship model, strongest performance",
         tier: "High",
       },
@@ -50,7 +50,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.openai.com",
         max_tokens: 128_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        api_key_setting: :babel_reunited_openai_api_key,
         description: "OpenAI cost-effective model, excellent performance",
         tier: "Medium",
       },
@@ -60,7 +60,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.openai.com",
         max_tokens: 16_385,
         max_output_tokens: 4_096,
-        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        api_key_setting: :babel_reunited_openai_api_key,
         description: "OpenAI economical model, fast speed",
         tier: "Low",
       },
@@ -72,7 +72,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.x.ai",
         max_tokens: 132_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_xai_api_key,
+        api_key_setting: :babel_reunited_xai_api_key,
         description: "xAI latest flagship model, HLE test leader, super strong math reasoning",
         tier: "High",
       },
@@ -82,7 +82,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.x.ai",
         max_tokens: 2_000_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_xai_api_key,
+        api_key_setting: :babel_reunited_xai_api_key,
         description: "xAI Grok-4 fast non-reasoning model, optimized for low latency",
         tier: "Medium",
       },
@@ -92,7 +92,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.x.ai",
         max_tokens: 131_072,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_xai_api_key,
+        api_key_setting: :babel_reunited_xai_api_key,
         description: "xAI medium model, balanced performance and cost",
         tier: "Medium",
       },
@@ -102,7 +102,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.x.ai",
         max_tokens: 128_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_xai_api_key,
+        api_key_setting: :babel_reunited_xai_api_key,
         description: "xAI economical model, fast response",
         tier: "Low",
       },
@@ -114,7 +114,7 @@ module DivineRapierAiTranslator
         base_url: "https://api.deepseek.com",
         max_tokens: 64_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_deepseek_api_key,
+        api_key_setting: :babel_reunited_deepseek_api_key,
         description: "DeepSeek latest flagship model, strong Chinese capabilities",
         tier: "High",
       },
@@ -124,23 +124,23 @@ module DivineRapierAiTranslator
         base_url: "https://api.deepseek.com",
         max_tokens: 64_000,
         max_output_tokens: 16_000,
-        api_key_setting: :divine_rapier_ai_translator_deepseek_api_key,
+        api_key_setting: :babel_reunited_deepseek_api_key,
         description: "DeepSeek general conversation model, cost-effective",
         tier: "Medium",
       },
     }.freeze
 
     def self.get_config
-      preset_model = SiteSetting.divine_rapier_ai_translator_preset_model
+      preset_model = SiteSetting.babel_reunited_preset_model
 
       if preset_model == "custom"
         return {
           provider: "custom",
-          model_name: SiteSetting.divine_rapier_ai_translator_custom_model_name,
-          base_url: SiteSetting.divine_rapier_ai_translator_custom_base_url,
-          max_tokens: SiteSetting.divine_rapier_ai_translator_custom_max_tokens,
-          max_output_tokens: SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
-          api_key: SiteSetting.divine_rapier_ai_translator_custom_api_key,
+          model_name: SiteSetting.babel_reunited_custom_model_name,
+          base_url: SiteSetting.babel_reunited_custom_base_url,
+          max_tokens: SiteSetting.babel_reunited_custom_max_tokens,
+          max_output_tokens: SiteSetting.babel_reunited_custom_max_output_tokens,
+          api_key: SiteSetting.babel_reunited_custom_api_key,
         }
       end
 

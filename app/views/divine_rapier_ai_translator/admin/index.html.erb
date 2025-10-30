@@ -1,25 +1,25 @@
 <% content_for :title do %>
-  <%= I18n.t("admin.site_settings.categories.divine_rapier_ai_translator") %>
+  <%= I18n.t("admin.site_settings.categories.babel_reunited") %>
 <% end %>
 
 <div class="ai-translator-admin">
-  <h2><%= I18n.t("admin.site_settings.categories.divine_rapier_ai_translator") %></h2>
+  <h2><%= I18n.t("admin.site_settings.categories.babel_reunited") %></h2>
   
   <div class="admin-content">
     <h3>Translation Statistics</h3>
     <div class="stats-grid">
       <div class="stat-item">
         <strong>Total Translations:</strong>
-        <span><%= DivineRapierAiTranslator::PostTranslation.count %></span>
+        <span><%= BabelReunited::PostTranslation.count %></span>
       </div>
       <div class="stat-item">
         <strong>Unique Languages:</strong>
-        <span><%= DivineRapierAiTranslator::PostTranslation.distinct.count(:language) %></span>
+        <span><%= BabelReunited::PostTranslation.distinct.count(:language) %></span>
       </div>
       <div class="stat-item">
         <strong>Most Translated Language:</strong>
         <span>
-          <% most_common = DivineRapierAiTranslator::PostTranslation.group(:language).count.max_by { |k, v| v } %>
+          <% most_common = BabelReunited::PostTranslation.group(:language).count.max_by { |k, v| v } %>
           <%= most_common ? "#{most_common[0]} (#{most_common[1]} translations)" : "N/A" %>
         </span>
       </div>
@@ -27,7 +27,7 @@
 
     <h3>Recent Translations</h3>
     <div class="recent-translations">
-      <% recent_translations = DivineRapierAiTranslator::PostTranslation.includes(:post).recent.limit(10) %>
+      <% recent_translations = BabelReunited::PostTranslation.includes(:post).recent.limit(10) %>
       <% if recent_translations.any? %>
         <table class="table">
           <thead>
@@ -58,7 +58,7 @@
 
     <h3>Language Distribution</h3>
     <div class="language-stats">
-      <% language_counts = DivineRapierAiTranslator::PostTranslation.group(:language).count %>
+      <% language_counts = BabelReunited::PostTranslation.group(:language).count %>
       <% if language_counts.any? %>
         <div class="language-chart">
           <% language_counts.sort_by { |k, v| -v }.each do |language, count| %>

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class UserPreferredLanguage < ActiveRecord::Base
     self.table_name = "user_preferred_languages"
 

@@ -11,7 +11,7 @@ import { fn } from "@ember/helper";
 
 export default class AiTranslationLanguage extends Component {
   static shouldRender(args, context) {
-    return context.siteSettings.divine_rapier_ai_translator_enabled;
+    return context.siteSettings.babel_reunited_enabled;
   }
 
   @service currentUser;
@@ -29,7 +29,7 @@ export default class AiTranslationLanguage extends Component {
 
   async loadCurrentLanguage() {
     try {
-      const response = await ajax("/ai-translator/user-preferred-language", {
+      const response = await ajax("/babel-reunited/user-preferred-language", {
         type: "GET"
       });
       this.currentLanguage = response.language || "en";
@@ -68,7 +68,7 @@ export default class AiTranslationLanguage extends Component {
     this.saving = true;
     
     try {
-      await ajax("/ai-translator/user-preferred-language", {
+      await ajax("/babel-reunited/user-preferred-language", {
         type: "POST",
         data: { language: language, enabled: this.enabled }
       });
@@ -95,7 +95,7 @@ export default class AiTranslationLanguage extends Component {
     
     try {
       const newEnabled = !this.enabled;
-      await ajax("/ai-translator/user-preferred-language", {
+      await ajax("/babel-reunited/user-preferred-language", {
         type: "POST",
         data: { enabled: newEnabled }
       });
@@ -126,7 +126,7 @@ export default class AiTranslationLanguage extends Component {
   <template>
     <div class="control-group ai-translation-language">
       <label class="control-label">
-        {{i18n "js.divine_rapier_ai_translator.preferences.ai_translation_language"}}
+        {{i18n "js.babel_reunited.preferences.ai_translation_language"}}
         <span
           class="text-success"
           style="margin-left: 8px; opacity: {{if this.showSavedNotice '1' '0'}}; transition: opacity 0.6s;"
@@ -149,7 +149,7 @@ export default class AiTranslationLanguage extends Component {
             />
             <span class="toggle-slider"></span>
             <span class="toggle-text">
-              {{i18n "js.divine_rapier_ai_translator.preferences.enable_ai_translation"}}
+              {{i18n "js.babel_reunited.preferences.enable_ai_translation"}}
             </span>
           </label>
         </div>
@@ -178,7 +178,7 @@ export default class AiTranslationLanguage extends Component {
       {{/if}}
       
       <div class="instructions">
-        {{i18n "js.divine_rapier_ai_translator.preferences.ai_translation_language_description"}}
+        {{i18n "js.babel_reunited.preferences.ai_translation_language_description"}}
       </div>
     </div>
   </template>

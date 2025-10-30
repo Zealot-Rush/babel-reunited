@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class TranslationLogger
-    LOG_FILE_PATH = Rails.root.join("log", "ai_translation.log")
+    LOG_FILE_PATH = Rails.root.join("log", "babel_reunited_translation.log")
     
     def self.log_translation_start(post_id:, target_language:, content_length:, force_update: false)
       log_entry = {

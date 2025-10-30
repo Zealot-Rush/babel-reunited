@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class TranslationsController < ::ApplicationController
     requires_plugin PLUGIN_NAME
 
@@ -101,7 +101,7 @@ module DivineRapierAiTranslator
       begin
         require 'sidekiq/api'
         pending_jobs = Sidekiq::Queue.new("default").select do |job|
-          job.klass == "Jobs::DivineRapierAiTranslator::TranslatePostJob" &&
+          job.klass == "Jobs::BabelReunited::TranslatePostJob" &&
           job.args[0]["post_id"] == @post.id
         end
 

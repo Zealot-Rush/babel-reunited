@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
+class Jobs::BabelReunited::TranslatePostJob < ::Jobs::Base
   def execute(args)
     post_id = args[:post_id]
     target_language = args[:target_language]
@@ -54,7 +54,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
   end
 
   def handle_post_deleted_or_hidden(post_id, target_language, topic_id)
-    DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
+    BabelReunited::TranslationLogger.log_translation_skipped(
       post_id: post_id,
       target_language: target_language,
       reason: "post_deleted_or_hidden",
@@ -62,7 +62,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
   end
 
   def handle_post_not_found(post_id, target_language)
-    DivineRapierAiTranslator::TranslationLogger.log_translation_skipped(
+    BabelReunited::TranslationLogger.log_translation_skipped(
       post_id: post_id,
       target_language: target_language,
       reason: "post_not_found",
@@ -71,7 +71,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
 
 
   def log_translation_start(post_id, target_language, post, force_update)
-    DivineRapierAiTranslator::TranslationLogger.log_translation_start(
+    BabelReunited::TranslationLogger.log_translation_start(
       post_id: post_id,
       target_language: target_language,
       content_length: post.raw&.length || 0,
@@ -80,7 +80,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
   end
 
   def execute_translation_service(post, target_language, force_update)
-    DivineRapierAiTranslator::TranslationService.new(
+    BabelReunited::TranslationService.new(
       post: post,
       target_language: target_language,
       force_update: force_update,
@@ -109,7 +109,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
       ),
     )
     
-    DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+    BabelReunited::TranslationLogger.log_translation_error(
       post_id: post_id,
       target_language: target_language,
       error: StandardError.new(result.error),
@@ -135,7 +135,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     )
     
     ai_response = result.ai_response || {}
-    DivineRapierAiTranslator::TranslationLogger.log_translation_success(
+    BabelReunited::TranslationLogger.log_translation_success(
       post_id: post_id,
       target_language: target_language,
       translation_id: translation.id,
@@ -172,7 +172,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
 
   def handle_unexpected_error(error, post_id, target_language, processing_time)
     # Try to find the translation record to update its status
-    translation = DivineRapierAiTranslator::PostTranslation.find_translation(post_id, target_language)
+    translation = BabelReunited::PostTranslation.find_translation(post_id, target_language)
     
     if translation.present?
       translation.update!(
@@ -186,7 +186,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
     end
     
     # Log the error
-    DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+    BabelReunited::TranslationLogger.log_translation_error(
       post_id: post_id,
       target_language: target_language,
       error: error,

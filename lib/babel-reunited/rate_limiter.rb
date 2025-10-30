@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class RateLimiter
     def self.can_make_request?
-      rate_limit = SiteSetting.divine_rapier_ai_translator_rate_limit_per_minute
+      rate_limit = SiteSetting.babel_reunited_rate_limit_per_minute
       return true if rate_limit <= 0
 
       current_minute = Time.current.to_i / 60
@@ -14,7 +14,7 @@ module DivineRapierAiTranslator
     end
 
     def self.record_request
-      rate_limit = SiteSetting.divine_rapier_ai_translator_rate_limit_per_minute
+      rate_limit = SiteSetting.babel_reunited_rate_limit_per_minute
       return if rate_limit <= 0
 
       current_minute = Time.current.to_i / 60
@@ -27,7 +27,7 @@ module DivineRapierAiTranslator
     end
 
     def self.remaining_requests
-      rate_limit = SiteSetting.divine_rapier_ai_translator_rate_limit_per_minute
+      rate_limit = SiteSetting.babel_reunited_rate_limit_per_minute
       return Float::INFINITY if rate_limit <= 0
 
       current_minute = Time.current.to_i / 60

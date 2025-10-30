@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-DivineRapierAiTranslator::Engine.routes.draw do
+BabelReunited::Engine.routes.draw do
   resources :posts, only: [] do
     resources :translations, only: [:index, :show, :create, :destroy] do
       collection do

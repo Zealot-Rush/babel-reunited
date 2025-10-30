@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   module PostExtension
     extend ActiveSupport::Concern
 
     def translate_to_language(target_language, force_update: false)
-      DivineRapierAiTranslator::TranslationService.new(
+      BabelReunited::TranslationService.new(
         post: self,
         target_language: target_language,
         force_update: force_update,
@@ -30,7 +30,7 @@ module DivineRapierAiTranslator
       target_languages.each do |language|
         # Always enqueue translation job - no skipping based on existing translations
         Jobs.enqueue(
-          Jobs::DivineRapierAiTranslator::TranslatePostJob,
+          Jobs::BabelReunited::TranslatePostJob,
           post_id: id,
           target_language: language,
           force_update: force_update,
@@ -39,7 +39,7 @@ module DivineRapierAiTranslator
     end
 
     def create_or_update_translation_record(target_language)
-      existing_translation = DivineRapierAiTranslator::PostTranslation.find_translation(id, target_language)
+      existing_translation = BabelReunited::PostTranslation.find_translation(id, target_language)
       
       if existing_translation.present?
         # Update existing translation with "translating" status and empty content
@@ -55,7 +55,7 @@ module DivineRapierAiTranslator
         existing_translation
       else
         # Create new translation with "translating" status and empty content
-        DivineRapierAiTranslator::PostTranslation.create!(
+        BabelReunited::PostTranslation.create!(
           post: self,
           language: target_language,
           status: "translating",

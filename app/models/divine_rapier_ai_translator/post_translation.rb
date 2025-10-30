@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class PostTranslation < ActiveRecord::Base
     self.table_name = "post_translations"
 

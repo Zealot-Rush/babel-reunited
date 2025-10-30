@@ -3,7 +3,7 @@
 require "faraday"
 require "json"
 
-module DivineRapierAiTranslator
+module BabelReunited
   class TranslationService
     include Service::Base
 
@@ -63,7 +63,7 @@ module DivineRapierAiTranslator
       # Only translate title for the first post of a topic
       return nil unless @post.post_number == 1
       return nil if @post.topic.title.blank?
-      return nil unless SiteSetting.divine_rapier_ai_translator_translate_title
+      return nil unless SiteSetting.babel_reunited_translate_title
       
       @post.topic.title
     end
@@ -73,7 +73,7 @@ module DivineRapierAiTranslator
       return { error: api_config[:error] } if api_config[:error]
 
       # Check rate limit
-      unless DivineRapierAiTranslator::RateLimiter.can_make_request?
+      unless BabelReunited::RateLimiter.can_make_request?
         return { error: "Rate limit exceeded. Please try again later." }
       end
 
@@ -81,7 +81,7 @@ module DivineRapierAiTranslator
       total_length = content.length
       total_length += title.length if title.present?
       
-      if total_length > SiteSetting.divine_rapier_ai_translator_max_content_length
+      if total_length > SiteSetting.babel_reunited_max_content_length
         return { error: "Content too long for translation" }
       end
 
@@ -92,7 +92,7 @@ module DivineRapierAiTranslator
       response = make_openai_request(prompt, api_config)
 
       # Record the request for rate limiting
-      DivineRapierAiTranslator::RateLimiter.record_request
+      BabelReunited::RateLimiter.record_request
 
       return { error: response[:error] } if response[:error]
 
@@ -110,7 +110,7 @@ module DivineRapierAiTranslator
     rescue => e
       Rails.logger.error("OpenAI API error: #{e.message}")
       Rails.logger.error(e.backtrace.join("\n")) if e.backtrace
-      DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+      BabelReunited::TranslationLogger.log_translation_error(
         post_id: @post&.id,
         target_language: @target_language,
         error: e,
@@ -169,7 +169,7 @@ module DivineRapierAiTranslator
     end
 
     def build_translation_prompt(content, target_language, title = nil)
-      preserve_formatting = SiteSetting.divine_rapier_ai_translator_preserve_formatting
+      preserve_formatting = SiteSetting.babel_reunited_preserve_formatting
       
       if title.present?
         # Include title in translation prompt
@@ -241,8 +241,8 @@ module DivineRapierAiTranslator
     end
 
     def get_api_config
-      config = DivineRapierAiTranslator::ModelConfig.get_config
-      return { error: "Invalid preset model: #{SiteSetting.divine_rapier_ai_translator_preset_model}" } if config.nil?
+      config = BabelReunited::ModelConfig.get_config
+      return { error: "Invalid preset model: #{SiteSetting.babel_reunited_preset_model}" } if config.nil?
 
       api_key = config[:api_key]
       return { error: "API key not configured for provider #{config[:provider]}" } if api_key.blank?
@@ -257,7 +257,7 @@ module DivineRapierAiTranslator
         api_key: api_key,
         base_url: base_url,
         model: model_name,
-        max_tokens: config[:max_output_tokens] || config[:max_tokens] || SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
+        max_tokens: config[:max_output_tokens] || config[:max_tokens] || SiteSetting.babel_reunited_custom_max_output_tokens,
         provider: config[:provider]
       }
     end
@@ -298,7 +298,7 @@ module DivineRapierAiTranslator
             end
           end
 
-        DivineRapierAiTranslator::TranslationLogger.log_provider_response(
+        BabelReunited::TranslationLogger.log_provider_response(
           post_id: @post&.id,
           target_language: @target_language,
           status: response.status,
@@ -326,7 +326,7 @@ module DivineRapierAiTranslator
                 end
               end
 
-            DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+            BabelReunited::TranslationLogger.log_translation_error(
               post_id: @post&.id,
               target_language: @target_language,
               error: StandardError.new(result[:error]),
@@ -347,7 +347,7 @@ module DivineRapierAiTranslator
       end
     rescue Faraday::Error => e
       Rails.logger.error("Faraday error: #{e.message}")
-      DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+      BabelReunited::TranslationLogger.log_translation_error(
         post_id: @post&.id,
         target_language: @target_language,
         error: e,
@@ -536,7 +536,7 @@ module DivineRapierAiTranslator
 
       # Log provider error details to ai_translation.log for diagnostics
       begin
-        DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+        BabelReunited::TranslationLogger.log_translation_error(
           post_id: @post&.id,
           target_language: @target_language,
           error: StandardError.new(error_message),

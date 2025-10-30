@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class PostTranslationSerializer < ApplicationSerializer
     attributes :id, :language, :translated_content, :translated_title, :source_language, 
                :translation_provider, :created_at, :updated_at, :confidence, :status

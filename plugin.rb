@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# name: divine-rapier-ai-translator
+# name: babel-reunited
 # about: AI-powered post translation plugin that automatically translates posts to multiple languages using third-party AI APIs
 # meta_topic_id: TODO
 # version: 0.1.0
@@ -8,12 +8,12 @@
 # url: https://github.com/divine-rapier/discourse-ai-translator
 # required_version: 2.7.0
 
-enabled_site_setting :divine_rapier_ai_translator_enabled
+enabled_site_setting :babel_reunited_enabled
 
 register_asset "stylesheets/translated-title.scss"
 
-module ::DivineRapierAiTranslator
-  PLUGIN_NAME = "divine-rapier-ai-translator"
+module ::BabelReunited
+  PLUGIN_NAME = "babel-reunited"
 end
 
 require_relative "lib/divine_rapier_ai_translator/engine"
@@ -35,24 +35,24 @@ after_initialize do
 
   # Mount the engine routes
   Discourse::Application.routes.append do
-    mount ::DivineRapierAiTranslator::Engine, at: "/ai-translator"
+    mount ::BabelReunited::Engine, at: "/babel-reunited"
   end
 
   # Extend Post model with translation functionality
   reloadable_patch do
     Post.class_eval do # rubocop:disable Discourse/Plugins/NoMonkeyPatching
       has_many :post_translations,
-               class_name: "DivineRapierAiTranslator::PostTranslation",
+               class_name: "BabelReunited::PostTranslation",
                dependent: :destroy
       
-      prepend DivineRapierAiTranslator::PostExtension
+      prepend BabelReunited::PostExtension
     end
   end
 
   reloadable_patch do
     User.class_eval do # rubocop:disable Discourse/Plugins/NoMonkeyPatching
       has_one :user_preferred_language,
-              class_name: "DivineRapierAiTranslator::UserPreferredLanguage",
+              class_name: "BabelReunited::UserPreferredLanguage",
               dependent: :destroy
     end
   end
@@ -68,7 +68,7 @@ after_initialize do
       .recent
       .limit(5)
       .map do |translation|
-        DivineRapierAiTranslator::PostTranslationSerializer.new(translation).as_json
+        BabelReunited::PostTranslationSerializer.new(translation).as_json
       end
   end
 
@@ -88,7 +88,7 @@ after_initialize do
 
   # Add translated title to Topic serializers
   add_to_serializer(:topic_view, :translated_title, include_condition: -> { 
-    SiteSetting.divine_rapier_ai_translator_enabled && 
+    SiteSetting.babel_reunited_enabled && 
     scope&.user&.user_preferred_language&.enabled != false &&
     scope&.user&.user_preferred_language&.language.present?
   }) do
@@ -99,7 +99,7 @@ after_initialize do
     first_post = object.topic.first_post
     return nil unless first_post
     
-    translation = DivineRapierAiTranslator::PostTranslation.find_translation(
+    translation = BabelReunited::PostTranslation.find_translation(
       first_post.id, 
       user_preferred_language.language
     )
@@ -114,7 +114,7 @@ after_initialize do
 
   # Also add to listable topics for topic lists
   add_to_serializer(:listable_topic, :translated_title, include_condition: -> { 
-    SiteSetting.divine_rapier_ai_translator_enabled && 
+    SiteSetting.babel_reunited_enabled && 
     scope&.user&.user_preferred_language&.enabled != false &&
     scope&.user&.user_preferred_language&.language.present?
   }) do
@@ -124,7 +124,7 @@ after_initialize do
     first_post = object.first_post
     return nil unless first_post
     
-    translation = DivineRapierAiTranslator::PostTranslation.find_translation(
+    translation = BabelReunited::PostTranslation.find_translation(
       first_post.id, 
       user_preferred_language.language
     )
@@ -139,7 +139,7 @@ after_initialize do
 
   # Add to topic list item serializer for topic lists
   add_to_serializer(:topic_list_item, :translated_title, include_condition: -> { 
-    SiteSetting.divine_rapier_ai_translator_enabled && 
+    SiteSetting.babel_reunited_enabled && 
     scope&.user&.user_preferred_language&.enabled != false &&
     scope&.user&.user_preferred_language&.language.present?
   }) do
@@ -149,7 +149,7 @@ after_initialize do
     first_post = object.first_post
     return nil unless first_post
     
-    translation = DivineRapierAiTranslator::PostTranslation.find_translation(
+    translation = BabelReunited::PostTranslation.find_translation(
       first_post.id, 
       user_preferred_language.language
     )
@@ -164,10 +164,10 @@ after_initialize do
 
   # Event handlers for automatic translation
   on(:post_created) do |post|
-    next unless SiteSetting.divine_rapier_ai_translator_enabled
+    next unless SiteSetting.babel_reunited_enabled
     next if post.raw.blank?
 
-    auto_translate_languages = SiteSetting.divine_rapier_ai_translator_auto_translate_languages
+    auto_translate_languages = SiteSetting.babel_reunited_auto_translate_languages
     if auto_translate_languages.present?
       languages = auto_translate_languages.split(",").map(&:strip)
       
@@ -181,7 +181,7 @@ after_initialize do
   end
 
   on(:post_edited) do |post|
-    next unless SiteSetting.divine_rapier_ai_translator_enabled
+    next unless SiteSetting.babel_reunited_enabled
     next if post.raw.blank?
 
     # Re-translate existing translations when post is edited
@@ -202,7 +202,7 @@ after_initialize do
 
   # User login event handler for language preference prompt
   on(:user_logged_in) do |user|
-    next unless SiteSetting.divine_rapier_ai_translator_enabled
+    next unless SiteSetting.babel_reunited_enabled
     next if user.user_preferred_language.present?
 
     # Use MessageBus to trigger frontend modal display
@@ -213,7 +213,7 @@ after_initialize do
   end
 
   # Add admin route
-  add_admin_route "divine_rapier_ai_translator.title", "divine-rapier-ai-translator", use_new_show_route: true
+  add_admin_route "babel_reunited.title", "babel-reunited", use_new_show_route: true
 
   # Register frontend widgets and components
   register_asset "stylesheets/translation-widgets.scss"

@@ -6,7 +6,7 @@ import LanguageTabsConnector from "../connectors/before-post-article/language-ta
  * This initializer registers all translation-related widgets and components
  */
 export default {
-  name: "divine-rapier-ai-translator-widgets",
+  name: "babel-reunited-widgets",
 
   initialize() {
     withPluginApi((api) => {

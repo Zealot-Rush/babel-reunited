@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DivineRapierAiTranslator
+module BabelReunited
   class AdminController < ::Admin::AdminController
     requires_plugin PLUGIN_NAME
 
