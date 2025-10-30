@@ -22,7 +22,7 @@ export default class LanguagePreferenceModal extends Component {
     this.saving = true;
     
     try {
-      await ajax("/ai-translator/user-preferred-language", {
+      await ajax("/babel-reunited/user-preferred-language", {
         type: "POST",
         data: {
           language: language
@@ -49,7 +49,7 @@ export default class LanguagePreferenceModal extends Component {
     this.saving = true;
     
     try {
-      await ajax("/ai-translator/user-preferred-language", {
+      await ajax("/babel-reunited/user-preferred-language", {
         type: "POST",
         data: {
           enabled: false
@@ -80,11 +80,11 @@ export default class LanguagePreferenceModal extends Component {
   <template>
     <DModal
       @closeModal={{@closeModal}}
-      @title={{i18n "divine_rapier_ai_translator.language_preference_modal.title"}}
+      @title={{i18n "js.babel_reunited.language_preference_modal.title"}}
       class="language-preference-modal"
     >
       <:body>
-        <p>{{i18n "divine_rapier_ai_translator.language_preference_modal.description"}}</p>
+        <p>{{i18n "js.babel_reunited.language_preference_modal.description"}}</p>
         
         <div class="language-buttons">
           <button 
@@ -115,7 +115,7 @@ export default class LanguagePreferenceModal extends Component {
         
         <div class="disable-section">
           <div class="disable-text">
-            {{i18n "divine_rapier_ai_translator.language_preference_modal.disable_description"}}
+            {{i18n "js.babel_reunited.language_preference_modal.disable_description"}}
           </div>
           <button 
             class="disable-btn" 
@@ -123,7 +123,7 @@ export default class LanguagePreferenceModal extends Component {
             {{on "click" this.disableTranslation}}
           >
             <span class="disable-icon">🚫</span>
-            <span class="disable-label">{{i18n "divine_rapier_ai_translator.language_preference_modal.disable"}}</span>
+            <span class="disable-label">{{i18n "js.babel_reunited.language_preference_modal.disable"}}</span>
           </button>
         </div>
       </:body>

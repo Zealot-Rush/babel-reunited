@@ -2,16 +2,16 @@ de:
   admin:
     site_settings:
       categories:
-        divine_rapier_ai_translator: "KI-Übersetzer"
-  divine_rapier_ai_translator:
-    title: "KI-Übersetzer"
+        babel_reunited: "Babel Reunited"
+  babel_reunited:
+    title: "Babel Reunited"
   site_settings:
-    divine_rapier_ai_translator_enabled: "KI-Übersetzer-Plugin aktivieren"
-    divine_rapier_ai_translator_model: "OpenAI-Modell für Übersetzung verwenden"
-    divine_rapier_ai_translator_auto_translate_languages: "Automatisch in Sprachen übersetzen (durch Kommas getrennte Sprachcodes)"
-    divine_rapier_ai_translator_openai_api_key: "OpenAI API-Schlüssel"
-    divine_rapier_ai_translator_openai_base_url: "OpenAI Basis-URL (leer lassen für Standard OpenAI API, oder benutzerdefinierte OpenAI-kompatible API URL eingeben)"
-    divine_rapier_ai_translator_rate_limit_per_minute: "Rate-Limit pro Minute"
-    divine_rapier_ai_translator_max_content_length: "Maximale Inhaltslänge für Übersetzung"
-    divine_rapier_ai_translator_max_tokens: "Maximale Token für KI-Antwort"
-    divine_rapier_ai_translator_preserve_formatting: "Markdown/HTML-Formatierung beibehalten"
+    babel_reunited_enabled: "Babel Reunited Plugin aktivieren"
+    babel_reunited_model: "OpenAI-Modell für Übersetzung verwenden"
+    babel_reunited_auto_translate_languages: "Automatisch in Sprachen übersetzen (durch Kommas getrennte Sprachcodes)"
+    babel_reunited_openai_api_key: "OpenAI API-Schlüssel"
+    babel_reunited_openai_base_url: "OpenAI Basis-URL (leer lassen für Standard OpenAI API, oder benutzerdefinierte OpenAI-kompatible API URL eingeben)"
+    babel_reunited_rate_limit_per_minute: "Rate-Limit pro Minute"
+    babel_reunited_max_content_length: "Maximale Inhaltslänge für Übersetzung"
+    babel_reunited_max_tokens: "Maximale Token für KI-Antwort"
+    babel_reunited_preserve_formatting: "Markdown/HTML-Formatierung beibehalten"

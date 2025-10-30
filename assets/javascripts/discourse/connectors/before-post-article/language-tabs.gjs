@@ -5,8 +5,8 @@ import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import { htmlSafe } from "@ember/template";
-import icon from "discourse/helpers/d-icon";
 import { eq } from "truth-helpers";
+import icon from "discourse/helpers/d-icon";
 
 /**
  * Simple language tabs connector component
@@ -333,7 +333,7 @@ export default class LanguageTabsConnector extends Component {
           >
             {{langInfo.name}}
             {{#if (eq langInfo.status "translating")}}
-              {{icon "spinner" class="loading-icon"}}
+              {{icon "spinner" class="loading-icon spinning"}}
             {{/if}}
           </button>
         {{/each}}
