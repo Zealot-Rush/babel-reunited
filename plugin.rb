@@ -16,22 +16,22 @@ module ::BabelReunited
   PLUGIN_NAME = "babel-reunited"
 end
 
-require_relative "lib/divine_rapier_ai_translator/engine"
+require_relative "lib/babel_reunited/engine"
 
 # Load models BEFORE after_initialize
-require_relative "app/models/divine_rapier_ai_translator/post_translation"
-require_relative "app/models/divine_rapier_ai_translator/user_preferred_language"
-require_relative "lib/divine_rapier_ai_translator/post_extension"
+require_relative "app/models/babel_reunited/post_translation"
+require_relative "app/models/babel_reunited/user_preferred_language"
+require_relative "lib/babel_reunited/post_extension"
 
 after_initialize do
   # Load other required files
-  require_relative "app/services/divine_rapier_ai_translator/translation_service"
-  require_relative "app/jobs/regular/divine_rapier_ai_translator/translate_post_job"
-  require_relative "app/controllers/divine_rapier_ai_translator/translations_controller"
-  require_relative "app/controllers/divine_rapier_ai_translator/admin_controller"
-  require_relative "app/serializers/divine_rapier_ai_translator/post_translation_serializer"
-  require_relative "lib/divine_rapier_ai_translator/rate_limiter"
-  require_relative "lib/divine_rapier_ai_translator/translation_logger"
+  require_relative "app/services/babel_reunited/translation_service"
+  require_relative "app/jobs/regular/babel_reunited/translate_post_job"
+  require_relative "app/controllers/babel_reunited/translations_controller"
+  require_relative "app/controllers/babel_reunited/admin_controller"
+  require_relative "app/serializers/babel_reunited/post_translation_serializer"
+  require_relative "lib/babel_reunited/rate_limiter"
+  require_relative "lib/babel_reunited/translation_logger"
 
   # Mount the engine routes
   Discourse::Application.routes.append do
