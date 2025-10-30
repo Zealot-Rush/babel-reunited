@@ -69,6 +69,21 @@ module DivineRapierAiTranslator
       write_log(log_entry)
     end
     
+    def self.log_provider_response(post_id:, target_language:, status:, body:, phase:, provider: nil)
+      log_entry = {
+        timestamp: Time.current.iso8601,
+        event: "provider_response",
+        post_id: post_id,
+        target_language: target_language,
+        status_code: status,
+        provider: provider,
+        phase: phase,
+        body: body
+      }
+      
+      write_log(log_entry)
+    end
+    
     private
     
     def self.write_log(log_entry)

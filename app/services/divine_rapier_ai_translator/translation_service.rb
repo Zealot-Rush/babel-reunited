@@ -27,6 +27,21 @@ module DivineRapierAiTranslator
       # Call OpenAI translation API
       translation_result = call_openai_api(content_to_translate, @target_language, title_to_translate)
 
+      # Fallback: if title was requested but missing, translate title with a lightweight prompt
+      if title_to_translate.present? && translation_result.is_a?(Hash) && translation_result[:translated_title].nil?
+        begin
+          api_config = get_api_config
+          if api_config[:error]
+            Rails.logger.warn("Skipping title fallback due to api_config error: #{api_config[:error]}")
+          else
+            fallback_title = translate_title_fallback(title_to_translate, @target_language, api_config)
+            translation_result[:translated_title] = fallback_title if fallback_title.present?
+          end
+        rescue => e
+          Rails.logger.warn("Title fallback translation failed: #{e.message}")
+        end
+      end
+
       return context.fail(error: translation_result[:error]) if translation_result[:error]
 
       # Create translation result object (not saved to database yet)
@@ -226,68 +241,25 @@ module DivineRapierAiTranslator
     end
 
     def get_api_config
-      preset_model = SiteSetting.divine_rapier_ai_translator_preset_model
-      
-      case preset_model
-      when "gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"
-        api_key = SiteSetting.divine_rapier_ai_translator_openai_api_key
-        return { error: "OpenAI API key not configured" } if api_key.blank?
-        {
-          api_key: api_key,
-          base_url: "https://api.openai.com",
-          model: preset_model,
-          max_tokens: 4096,
-          provider: "openai"
-        }
-      when "grok-2", "grok-3", "grok-4"
-        api_key = SiteSetting.divine_rapier_ai_translator_xai_api_key
-        return { error: "xAI API key not configured" } if api_key.blank?
-        # Map grok-4 to grok-beta, grok-3 to grok-2-1212, grok-2 to grok-2
-        model_mapping = {
-          "grok-4" => "grok-beta",
-          "grok-3" => "grok-2-1212",
-          "grok-2" => "grok-2"
-        }
-        {
-          api_key: api_key,
-          base_url: "https://api.x.ai",
-          model: model_mapping[preset_model],
-          max_tokens: 16000,
-          provider: "xai"
-        }
-      when "deepseek-r1", "deepseek-v3", "deepseek-v2"
-        api_key = SiteSetting.divine_rapier_ai_translator_deepseek_api_key
-        return { error: "DeepSeek API key not configured" } if api_key.blank?
-        # Map model names
-        model_mapping = {
-          "deepseek-r1" => "deepseek-reasoner",
-          "deepseek-v3" => "deepseek-chat",
-          "deepseek-v2" => "deepseek-chat"
-        }
-        {
-          api_key: api_key,
-          base_url: "https://api.deepseek.com",
-          model: model_mapping[preset_model],
-          max_tokens: SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
-          provider: "deepseek"
-        }
-      when "custom"
-        api_key = SiteSetting.divine_rapier_ai_translator_custom_api_key
-        return { error: "Custom API key not configured" } if api_key.blank?
-        base_url = SiteSetting.divine_rapier_ai_translator_custom_base_url
-        return { error: "Custom base URL not configured" } if base_url.blank?
-        model_name = SiteSetting.divine_rapier_ai_translator_custom_model_name
-        return { error: "Custom model name not configured" } if model_name.blank?
-        {
-          api_key: api_key,
-          base_url: base_url,
-          model: model_name,
-          max_tokens: SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
-          provider: "custom"
-        }
-      else
-        { error: "Invalid preset model: #{preset_model}" }
-      end
+      config = DivineRapierAiTranslator::ModelConfig.get_config
+      return { error: "Invalid preset model: #{SiteSetting.divine_rapier_ai_translator_preset_model}" } if config.nil?
+
+      api_key = config[:api_key]
+      return { error: "API key not configured for provider #{config[:provider]}" } if api_key.blank?
+
+      base_url = config[:base_url]
+      return { error: "Base URL not configured for provider #{config[:provider]}" } if base_url.blank?
+
+      model_name = config[:model_name]
+      return { error: "Model name not configured for provider #{config[:provider]}" } if model_name.blank?
+
+      {
+        api_key: api_key,
+        base_url: base_url,
+        model: model_name,
+        max_tokens: config[:max_output_tokens] || config[:max_tokens] || SiteSetting.divine_rapier_ai_translator_custom_max_output_tokens,
+        provider: config[:provider]
+      }
     end
 
     def make_openai_request(prompt, api_config)
@@ -312,8 +284,64 @@ module DivineRapierAiTranslator
           req.body = request_body.to_json
         end
 
+      # Always log provider HTTP response for diagnostics
+      begin
+        body_for_log =
+          case response.body
+          when String
+            response.body
+          else
+            begin
+              JSON.generate(response.body)
+            rescue
+              response.body.to_s
+            end
+          end
+
+        DivineRapierAiTranslator::TranslationLogger.log_provider_response(
+          post_id: @post&.id,
+          target_language: @target_language,
+          status: response.status,
+          body: body_for_log[0, 4000],
+          phase: "post_chat_completions",
+          provider: api_config[:provider]
+        )
+      rescue => _
+        # best-effort logging only
+      end
+
       if response.success?
-        parse_openai_response(response.body)
+        result = parse_openai_response(response.body)
+        if result.is_a?(Hash) && result[:error]
+          begin
+            body_for_log =
+              case response.body
+              when String
+                response.body
+              else
+                begin
+                  JSON.generate(response.body)
+                rescue
+                  response.body.to_s
+                end
+              end
+
+            DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+              post_id: @post&.id,
+              target_language: @target_language,
+              error: StandardError.new(result[:error]),
+              processing_time: 0,
+              context: {
+                phase: "provider_success_invalid_payload",
+                provider_status: response.status,
+                provider_body: body_for_log[0, 4000]
+              }
+            )
+          rescue => _
+            # best-effort logging
+          end
+        end
+        result
       else
         handle_openai_error(response)
       end
@@ -327,6 +355,47 @@ module DivineRapierAiTranslator
         context: { phase: "faraday_exception" }
       )
       { error: "Network error: #{e.message}" }
+    end
+
+    def translate_title_fallback(title, target_language, api_config)
+      conn =
+        Faraday.new(url: api_config[:base_url]) do |f|
+          f.request :json
+          f.response :json
+          f.adapter Faraday.default_adapter
+        end
+
+      prompt = <<~P
+        Translate the following text to #{target_language}.
+        Return ONLY the translated text, no quotes, no extra words.
+
+        Text:
+        #{title}
+      P
+
+      request_body = {
+        model: api_config[:model],
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: [128, api_config[:max_tokens].to_i].min,
+        temperature: 0.2,
+      }
+
+      response =
+        conn.post("/v1/chat/completions") do |req|
+          req.headers["Authorization"] = "Bearer #{api_config[:api_key]}"
+          req.headers["Content-Type"] = "application/json"
+          req.body = request_body.to_json
+        end
+
+      if response.success?
+        content = response.body.dig("choices", 0, "message", "content")
+        return content.to_s.strip if content.present?
+      end
+
+      nil
+    rescue => e
+      Rails.logger.warn("translate_title_fallback error: #{e.message}")
+      nil
     end
 
     def parse_openai_response(response_body)

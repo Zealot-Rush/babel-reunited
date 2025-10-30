@@ -4,6 +4,36 @@ module DivineRapierAiTranslator
   class ModelConfig
     PRESET_MODELS = {
       # OpenAI Models
+      "gpt-5" => {
+        provider: "openai",
+        model_name: "gpt-5",
+        base_url: "https://api.openai.com",
+        max_tokens: 128_000,
+        max_output_tokens: 16_000,
+        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        description: "OpenAI next-generation flagship model",
+        tier: "High",
+      },
+      "gpt-5-mini" => {
+        provider: "openai",
+        model_name: "gpt-5-mini",
+        base_url: "https://api.openai.com",
+        max_tokens: 128_000,
+        max_output_tokens: 16_000,
+        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        description: "OpenAI GPT-5 cost-effective variant",
+        tier: "Medium",
+      },
+      "gpt-5-nano" => {
+        provider: "openai",
+        model_name: "gpt-5-nano",
+        base_url: "https://api.openai.com",
+        max_tokens: 16_385,
+        max_output_tokens: 4_096,
+        api_key_setting: :divine_rapier_ai_translator_openai_api_key,
+        description: "OpenAI GPT-5 lightweight variant for speed and cost",
+        tier: "Low",
+      },
       "gpt-4o" => {
         provider: "openai",
         model_name: "gpt-4o",
@@ -46,6 +76,16 @@ module DivineRapierAiTranslator
         description: "xAI latest flagship model, HLE test leader, super strong math reasoning",
         tier: "High",
       },
+      "grok-4-fast-non-reasoning" => {
+        provider: "xai",
+        model_name: "grok-4-fast-non-reasoning",
+        base_url: "https://api.x.ai",
+        max_tokens: 2_000_000,
+        max_output_tokens: 16_000,
+        api_key_setting: :divine_rapier_ai_translator_xai_api_key,
+        description: "xAI Grok-4 fast non-reasoning model, optimized for low latency",
+        tier: "Medium",
+      },
       "grok-3" => {
         provider: "xai",
         model_name: "grok-3",
@@ -87,16 +127,6 @@ module DivineRapierAiTranslator
         api_key_setting: :divine_rapier_ai_translator_deepseek_api_key,
         description: "DeepSeek general conversation model, cost-effective",
         tier: "Medium",
-      },
-      "deepseek-v2" => {
-        provider: "deepseek",
-        model_name: "deepseek-v2",
-        base_url: "https://api.deepseek.com",
-        max_tokens: 32_000,
-        max_output_tokens: 8_000,
-        api_key_setting: :divine_rapier_ai_translator_deepseek_api_key,
-        description: "DeepSeek economical model, strong programming capabilities",
-        tier: "Low",
       },
     }.freeze
 
