@@ -161,6 +161,10 @@ module DivineRapierAiTranslator
             "translated_content": "translated HTML content here",
             "translated_title": "translated title here"
           }
+          Requirements for JSON values:
+          - translated_content MUST be pure HTML (no Markdown code fences like ``` or ```html)
+          - Do NOT include document wrappers like <html>, <head>, or <body>
+          - Do NOT add any extra text outside the HTML
         TITLE_INSTRUCTION
       else
         title_instruction = ""
@@ -180,6 +184,8 @@ module DivineRapierAiTranslator
           - Do NOT modify any HTML structure or attributes
           - Do NOT add or remove any HTML tags
           - Do NOT change any links or URLs
+          - Do NOT wrap the output in Markdown code fences (e.g., ``` or ```html)
+          - Do NOT include document-level wrappers like <html>, <head>, or <body>
           
           The output should be valid HTML with the EXACT same structure as the input, only with translated text content.
           
@@ -199,6 +205,8 @@ module DivineRapierAiTranslator
           - Translate ONLY the text content, NOT the HTML tags or attributes
           - Preserve ALL HTML tags, href attributes, and URLs exactly as they are
           - Do NOT modify any HTML structure or links
+          - Do NOT wrap the output in Markdown code fences (e.g., ``` or ```html)
+          - Do NOT include document-level wrappers like <html>, <head>, or <body>
           
           If the text is already in #{target_language}, return the original HTML unchanged.
           Only return the translated HTML, no explanations or additional content.
