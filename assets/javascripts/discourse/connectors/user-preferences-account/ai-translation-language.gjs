@@ -18,6 +18,9 @@ export default class AiTranslationLanguage extends Component {
   @tracked saving = false;
   @tracked currentLanguage = null;
   @tracked enabled = true;
+  @tracked showSavedNotice = false;
+
+  savedNoticeTimerId = null;
 
   constructor() {
     super(...arguments);
@@ -35,6 +38,17 @@ export default class AiTranslationLanguage extends Component {
       this.currentLanguage = "en";
       this.enabled = true;
     }
+  }
+
+  showSaved() {
+    this.showSavedNotice = true;
+    if (this.savedNoticeTimerId) {
+      clearTimeout(this.savedNoticeTimerId);
+    }
+    this.savedNoticeTimerId = setTimeout(() => {
+      this.showSavedNotice = false;
+      this.savedNoticeTimerId = null;
+    }, 2000);
   }
 
   get languageOptions() {
@@ -60,6 +74,7 @@ export default class AiTranslationLanguage extends Component {
       });
       
       this.currentLanguage = language;
+      this.showSaved();
       
       // 刷新currentUser数据
       if (this.currentUser) {
@@ -86,6 +101,7 @@ export default class AiTranslationLanguage extends Component {
       });
       
       this.enabled = newEnabled;
+      this.showSaved();
       
       // 刷新currentUser数据
       if (this.currentUser) {
@@ -99,10 +115,25 @@ export default class AiTranslationLanguage extends Component {
     }
   }
 
+  willDestroy() {
+    super.willDestroy?.();
+    if (this.savedNoticeTimerId) {
+      clearTimeout(this.savedNoticeTimerId);
+      this.savedNoticeTimerId = null;
+    }
+  }
+
   <template>
     <div class="control-group ai-translation-language">
       <label class="control-label">
         {{i18n "js.divine_rapier_ai_translator.preferences.ai_translation_language"}}
+        <span
+          class="text-success"
+          style="margin-left: 8px; opacity: {{if this.showSavedNotice '1' '0'}}; transition: opacity 0.6s;"
+          aria-live="polite"
+        >
+          {{i18n "saved"}}
+        </span>
       </label>
       
       <!-- Enable/Disable Toggle -->
@@ -131,11 +162,12 @@ export default class AiTranslationLanguage extends Component {
             {{#each this.languageOptions as |option|}}
               <button
                 type="button"
-                class="language-option {{if (eq option.value this.currentLanguage) 'selected'}}"
+                class="language-option btn btn-small {{if (eq option.value this.currentLanguage) 'btn-primary selected'}}"
                 disabled={{this.saving}}
                 {{on "click" (fn this.changeLanguage option.value)}}
                 data-language="{{option.value}}"
                 data-selected="{{if (eq option.value this.currentLanguage) 'true' 'false'}}"
+                aria-pressed="{{if (eq option.value this.currentLanguage) 'true' 'false'}}"
               >
                 <span class="flag">{{option.flag}}</span>
                 <span class="label">{{option.label}}</span>
