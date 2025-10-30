@@ -333,7 +333,11 @@ export default class LanguageTabsConnector extends Component {
           >
             {{langInfo.name}}
             {{#if (eq langInfo.status "translating")}}
-              {{icon "spinner" class="loading-icon spinning"}}
+              <span
+                style="display: inline-block; animation: rotate-forever 1s infinite linear; margin-left: 4px;"
+              >
+                {{icon "spinner" class="loading-icon"}}
+              </span>
             {{/if}}
           </button>
         {{/each}}
