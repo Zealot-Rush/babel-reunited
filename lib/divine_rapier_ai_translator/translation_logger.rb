@@ -39,7 +39,7 @@ module DivineRapierAiTranslator
       write_log(log_entry)
     end
     
-    def self.log_translation_error(post_id:, target_language:, error:, processing_time:)
+    def self.log_translation_error(post_id:, target_language:, error:, processing_time:, context: {})
       log_entry = {
         timestamp: Time.current.iso8601,
         event: "translation_failed",
@@ -48,9 +48,11 @@ module DivineRapierAiTranslator
         status: "error",
         error_message: error.message,
         error_class: error.class.name,
-        processing_time_ms: processing_time
+        backtrace: (error.respond_to?(:backtrace) && error.backtrace ? error.backtrace.first(10) : nil),
+        processing_time_ms: processing_time,
+        context: context.presence
       }
-      
+
       write_log(log_entry)
     end
     

@@ -114,6 +114,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
       target_language: target_language,
       error: StandardError.new(result.error),
       processing_time: processing_time,
+      context: { topic_id: topic_id, phase: "service_failure", force_update: translation&.metadata&.dig(:force_update) }
     )
     Rails.logger.error("Translation failed for post #{post_id}: #{result.error}")
   end
@@ -190,6 +191,7 @@ class Jobs::DivineRapierAiTranslator::TranslatePostJob < ::Jobs::Base
       target_language: target_language,
       error: error,
       processing_time: processing_time,
+      context: { phase: "unexpected_exception" }
     )
     
     Rails.logger.error("Unexpected error in translation job for post #{post_id}: #{error.message}")

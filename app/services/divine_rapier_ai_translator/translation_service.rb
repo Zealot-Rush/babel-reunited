@@ -95,6 +95,13 @@ module DivineRapierAiTranslator
     rescue => e
       Rails.logger.error("OpenAI API error: #{e.message}")
       Rails.logger.error(e.backtrace.join("\n")) if e.backtrace
+      DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+        post_id: @post&.id,
+        target_language: @target_language,
+        error: e,
+        processing_time: 0,
+        context: { phase: "call_openai_api_exception" }
+      )
       { error: "Translation service temporarily unavailable" }
     end
 
@@ -312,6 +319,13 @@ module DivineRapierAiTranslator
       end
     rescue Faraday::Error => e
       Rails.logger.error("Faraday error: #{e.message}")
+      DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+        post_id: @post&.id,
+        target_language: @target_language,
+        error: e,
+        processing_time: 0,
+        context: { phase: "faraday_exception" }
+      )
       { error: "Network error: #{e.message}" }
     end
 
@@ -430,8 +444,43 @@ module DivineRapierAiTranslator
     end
 
     def handle_openai_error(response)
-      error_body = response.body
-      error_message = error_body.dig("error", "message") || "Unknown API error"
+      raw_body = response.body
+      parsed_body =
+        begin
+          if raw_body.is_a?(String)
+            JSON.parse(raw_body)
+          else
+            raw_body
+          end
+        rescue JSON::ParserError
+          nil
+        end
+
+      error_message =
+        if parsed_body.is_a?(Hash)
+          error_field = parsed_body["error"]
+          nested_error_message = error_field.is_a?(Hash) ? error_field["message"] : nil
+          nested_error_message || parsed_body["message"] || error_field || "Unknown API error"
+        else
+          raw_body.to_s.presence || "Unknown API error"
+        end
+
+      # Log provider error details to ai_translation.log for diagnostics
+      begin
+        DivineRapierAiTranslator::TranslationLogger.log_translation_error(
+          post_id: @post&.id,
+          target_language: @target_language,
+          error: StandardError.new(error_message),
+          processing_time: 0,
+          context: {
+            phase: "provider_error",
+            provider_status: response.status,
+            provider_body: raw_body.to_s[0, 4000], # truncate to avoid huge logs
+          }
+        )
+      rescue => _
+        # best-effort logging only
+      end
 
       case response.status
       when 401
