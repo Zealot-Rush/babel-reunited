@@ -13,9 +13,11 @@ Whether you’re writing in Chinese, Spanish, or English, your message will be i
 
 We are rebuilding the tower. Not toward heaven, but toward understanding.
 
+---
+
 - Plugin name: `babel-reunited`
 - Minimum Discourse version: 2.7.0
-- Repository: `https://github.com/divine-rapier/discourse-ai-translator`
+- Repository: `https://github.com/Zealot-Rush/babel-reunited`
 
 ## Features
 - Automatically translates posts after creation/edition to selected target languages (default: zh-cn, en, es; only these three are currently supported).
