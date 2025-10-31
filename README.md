@@ -3,6 +3,13 @@
 > “Now the whole world had one language and a common speech… But the Lord said, ‘Come, let us go down and confuse their language so they will not understand each other.’”
 > — Genesis 11:1–7
 
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/poshboytl/tuchuang/babel-reunited-readme.png" 
+       alt="We are rebuilding the tower — not toward heaven, but toward understanding." 
+       width="249">
+</p>
+
+
 Long ago, humanity dared to build a tower that reached toward the heavens. Unified in language and ambition, they worked as one—until their speech was scattered, and their understanding fractured. The Tower of Babel stood unfinished, not because they lacked tools, but because they no longer shared meaning.
 
 Today, in the age of AI, we’re given a chance to reverse that fate.
