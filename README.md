@@ -31,7 +31,7 @@ We are rebuilding the tower. Not toward heaven, but toward understanding.
 
 ```bash
 cd /path/to/discourse/plugins
-git clone https://github.com/divine-rapier/discourse-ai-translator.git
+git clone https://github.com/Zealot-Rush/babel-reunited.git
 ```
 
 ### Production steps (non‑Docker)
