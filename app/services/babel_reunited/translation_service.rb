@@ -20,21 +20,26 @@ module BabelReunited
 
       # Prepare content for translation
       content_to_translate = prepare_content_for_translation(@post.cooked)
-      
+
       # Prepare title for translation (only for first post)
       title_to_translate = prepare_title_for_translation
 
       # Call OpenAI translation API
-      translation_result = call_openai_api(content_to_translate, @target_language, title_to_translate)
+      translation_result =
+        call_openai_api(content_to_translate, @target_language, title_to_translate)
 
       # Fallback: if title was requested but missing, translate title with a lightweight prompt
-      if title_to_translate.present? && translation_result.is_a?(Hash) && translation_result[:translated_title].nil?
+      if title_to_translate.present? && translation_result.is_a?(Hash) &&
+           translation_result[:translated_title].nil?
         begin
           api_config = get_api_config
           if api_config[:error]
-            Rails.logger.warn("Skipping title fallback due to api_config error: #{api_config[:error]}")
+            Rails.logger.warn(
+              "Skipping title fallback due to api_config error: #{api_config[:error]}",
+            )
           else
-            fallback_title = translate_title_fallback(title_to_translate, @target_language, api_config)
+            fallback_title =
+              translate_title_fallback(title_to_translate, @target_language, api_config)
             translation_result[:translated_title] = fallback_title if fallback_title.present?
           end
         rescue => e
@@ -64,7 +69,7 @@ module BabelReunited
       return nil unless @post.post_number == 1
       return nil if @post.topic.title.blank?
       return nil unless SiteSetting.babel_reunited_translate_title
-      
+
       @post.topic.title
     end
 
@@ -80,10 +85,13 @@ module BabelReunited
       # Check content length (include title in length calculation)
       total_length = content.length
       total_length += title.length if title.present?
-      
-      if total_length > SiteSetting.babel_reunited_max_content_length
-        return { error: "Content too long for translation" }
-      end
+
+      # Get max content length from model config
+      # For preset models, use max_tokens from model_config (1 token ≈ 4 characters)
+      # For custom models, use settings.yml value
+      max_content_length = get_max_content_length(api_config)
+
+      return { error: "Content too long for translation" } if total_length > max_content_length
 
       # Prepare the prompt for translation
       prompt = build_translation_prompt(content, target_language, title)
@@ -115,7 +123,9 @@ module BabelReunited
         target_language: @target_language,
         error: e,
         processing_time: 0,
-        context: { phase: "call_openai_api_exception" }
+        context: {
+          phase: "call_openai_api_exception",
+        },
       )
       { error: "Translation service temporarily unavailable" }
     end
@@ -169,97 +179,112 @@ module BabelReunited
     end
 
     def build_translation_prompt(content, target_language, title = nil)
-      preserve_formatting = SiteSetting.babel_reunited_preserve_formatting
-      
-      if title.present?
-        # Include title in translation prompt
-        title_instruction = <<~TITLE_INSTRUCTION
-          
-          IMPORTANT: This post is the first post of a topic. Please also translate the topic title.
-          Topic title: #{title}
+      json_format =
+        if title.present?
+          <<~JSON_FORMAT
           
           Return your response in the following JSON format:
           {
             "translated_content": "translated HTML content here",
             "translated_title": "translated title here"
           }
-          Requirements for JSON values:
-          - translated_content MUST be pure HTML (no Markdown code fences like ``` or ```html)
-          - Do NOT include document wrappers like <html>, <head>, or <body>
-          - Do NOT add any extra text outside the HTML
-        TITLE_INSTRUCTION
-      else
-        title_instruction = ""
-      end
+        JSON_FORMAT
+        else
+          <<~JSON_FORMAT
+          
+          Return your response in the following JSON format:
+          {
+            "translated_content": "translated HTML content here"
+          }
+        JSON_FORMAT
+        end
 
-      if preserve_formatting
-        <<~PROMPT
-          Translate the following HTML content to #{target_language}. 
+      title_section =
+        if title.present?
+          <<~TITLE_SECTION
           
-          CRITICAL REQUIREMENTS:
-          - The input is HTML content with links, formatting, and Discourse-specific elements
-          - Translate ONLY the text content, NOT the HTML tags or attributes
-          - Preserve ALL HTML tags exactly as they are (including <a>, <p>, <div>, <span>, etc.)
-          - Keep ALL href attributes and URLs unchanged
-          - Maintain ALL CSS classes and IDs
-          - Preserve ALL line breaks and whitespace structure
-          - Do NOT modify any HTML structure or attributes
-          - Do NOT add or remove any HTML tags
-          - Do NOT change any links or URLs
-          - Do NOT wrap the output in Markdown code fences (e.g., ``` or ```html)
-          - Do NOT include document-level wrappers like <html>, <head>, or <body>
-          
-          The output should be valid HTML with the EXACT same structure as the input, only with translated text content.
-          
-          If the text is already in #{target_language}, return the original HTML unchanged.
-          Only return the translated HTML, no explanations or additional content.
-          #{title_instruction}
-          
-          HTML content to translate:
-          #{content}
-        PROMPT
-      else
-        <<~PROMPT
-          Translate the following HTML content to #{target_language}.
-          
-          IMPORTANT:
-          - The input is HTML content with links and formatting
-          - Translate ONLY the text content, NOT the HTML tags or attributes
-          - Preserve ALL HTML tags, href attributes, and URLs exactly as they are
-          - Do NOT modify any HTML structure or links
-          - Do NOT wrap the output in Markdown code fences (e.g., ``` or ```html)
-          - Do NOT include document-level wrappers like <html>, <head>, or <body>
-          
-          If the text is already in #{target_language}, return the original HTML unchanged.
-          Only return the translated HTML, no explanations or additional content.
-          #{title_instruction}
-          
-          HTML content to translate:
-          #{content}
-        PROMPT
-      end
+          IMPORTANT: This post is the first post of a topic. Please also translate the topic title.
+          Topic title: #{title}
+        TITLE_SECTION
+        else
+          ""
+        end
+
+      <<~PROMPT
+        Translate the following HTML content to #{target_language}. 
+        
+        CRITICAL REQUIREMENTS:
+        - The input is HTML content with links, formatting, and Discourse-specific elements
+        - Translate ONLY the text content, NOT the HTML tags or attributes
+        - Preserve ALL HTML tags exactly as they are (including <a>, <p>, <div>, <span>, etc.)
+        - Keep ALL href attributes and URLs unchanged
+        - Maintain ALL CSS classes and IDs
+        - Preserve ALL line breaks and whitespace structure
+        - Do NOT modify any HTML structure or attributes
+        - Do NOT add or remove any HTML tags
+        - Do NOT change any links or URLs
+        - Do NOT wrap the output in Markdown code fences (e.g., ``` or ```html)
+        - Do NOT include document-level wrappers like <html>, <head>, or <body>
+        
+        The output should be valid HTML with the EXACT same structure as the input, only with translated text content.
+        
+        If the text is already in #{target_language}, return the original HTML unchanged.
+        #{title_section}#{json_format}
+        
+        Requirements for JSON values:
+        - translated_content MUST be pure HTML (no Markdown code fences like ``` or ```html)
+        - Do NOT include document wrappers like <html>, <head>, or <body>
+        - Do NOT add any extra text outside the JSON
+        - Return ONLY valid JSON, no explanations or additional content
+        
+        HTML content to translate:
+        #{content}
+      PROMPT
     end
 
     def get_api_config
       config = BabelReunited::ModelConfig.get_config
-      return { error: "Invalid preset model: #{SiteSetting.babel_reunited_preset_model}" } if config.nil?
+      if config.nil?
+        return { error: "Invalid preset model: #{SiteSetting.babel_reunited_preset_model}" }
+      end
 
       api_key = config[:api_key]
       return { error: "API key not configured for provider #{config[:provider]}" } if api_key.blank?
 
       base_url = config[:base_url]
-      return { error: "Base URL not configured for provider #{config[:provider]}" } if base_url.blank?
+      if base_url.blank?
+        return { error: "Base URL not configured for provider #{config[:provider]}" }
+      end
 
       model_name = config[:model_name]
-      return { error: "Model name not configured for provider #{config[:provider]}" } if model_name.blank?
+      if model_name.blank?
+        return { error: "Model name not configured for provider #{config[:provider]}" }
+      end
 
       {
         api_key: api_key,
         base_url: base_url,
         model: model_name,
-        max_tokens: config[:max_output_tokens] || config[:max_tokens] || SiteSetting.babel_reunited_custom_max_output_tokens,
-        provider: config[:provider]
+        max_tokens:
+          config[:max_output_tokens] || config[:max_tokens] ||
+            SiteSetting.babel_reunited_custom_max_output_tokens,
+        provider: config[:provider],
+        max_tokens_for_length: config[:max_tokens],
       }
+    end
+
+    def get_max_content_length(api_config)
+      # For custom models, use settings.yml value
+      return SiteSetting.babel_reunited_max_content_length if api_config[:provider] == "custom"
+
+      # For preset models, calculate from max_tokens in model_config
+      # 1 token ≈ 4 characters (conservative estimate for English)
+      # For Chinese/Japanese, 1 token ≈ 2-3 characters, so we use 3 as a safe multiplier
+      max_tokens = api_config[:max_tokens_for_length]
+      return SiteSetting.babel_reunited_max_content_length unless max_tokens
+
+      # Use max_tokens * 3 as character limit (conservative for mixed languages)
+      max_tokens * 3
     end
 
     def make_openai_request(prompt, api_config)
@@ -293,7 +318,7 @@ module BabelReunited
           else
             begin
               JSON.generate(response.body)
-            rescue
+            rescue StandardError
               response.body.to_s
             end
           end
@@ -304,7 +329,7 @@ module BabelReunited
           status: response.status,
           body: body_for_log[0, 4000],
           phase: "post_chat_completions",
-          provider: api_config[:provider]
+          provider: api_config[:provider],
         )
       rescue => _
         # best-effort logging only
@@ -321,7 +346,7 @@ module BabelReunited
               else
                 begin
                   JSON.generate(response.body)
-                rescue
+                rescue StandardError
                   response.body.to_s
                 end
               end
@@ -334,8 +359,8 @@ module BabelReunited
               context: {
                 phase: "provider_success_invalid_payload",
                 provider_status: response.status,
-                provider_body: body_for_log[0, 4000]
-              }
+                provider_body: body_for_log[0, 4000],
+              },
             )
           rescue => _
             # best-effort logging
@@ -352,7 +377,9 @@ module BabelReunited
         target_language: @target_language,
         error: e,
         processing_time: 0,
-        context: { phase: "faraday_exception" }
+        context: {
+          phase: "faraday_exception",
+        },
       )
       { error: "Network error: #{e.message}" }
     end
@@ -406,89 +433,84 @@ module BabelReunited
       return { error: "No translation in response" } if response_content.blank?
 
       cleaned_content = response_content.strip
-      
-      # Try multiple approaches to parse JSON
+
+      # Parse JSON response
       parsed_result = try_parse_json_response(cleaned_content)
-      
+
       if parsed_result
-        parsed_result.merge({
-          source_language: "auto",
-          confidence: 0.95,
-          model: response_body.dig("model"),
-          tokens_used: response_body.dig("usage", "total_tokens"),
-        })
+        parsed_result.merge(
+          {
+            source_language: "auto",
+            confidence: 0.95,
+            model: response_body.dig("model"),
+            tokens_used: response_body.dig("usage", "total_tokens"),
+          },
+        )
       else
-        # Fallback to plain text response
-        {
-          translated_text: cleaned_content,
-          translated_title: nil,
-          source_language: "auto",
-          confidence: 0.95,
-          model: response_body.dig("model"),
-          tokens_used: response_body.dig("usage", "total_tokens"),
-        }
+        { error: "Failed to parse JSON response" }
       end
     end
 
     def try_parse_json_response(content)
-      # Method 1: Try to find complete JSON object
-      json_match = content.match(/\{.*?\}/m)
-      if json_match
-        begin
-          parsed = JSON.parse(json_match[0])
-          if parsed["translated_content"].present?
-            Rails.logger.info("Successfully parsed JSON response with translated_content")
-            return {
+      # Method 1: Try direct JSON parse
+      begin
+        parsed = JSON.parse(content)
+        if parsed.is_a?(Hash) && parsed["translated_content"].present?
+          Rails.logger.info("Successfully parsed JSON response")
+          return(
+            {
               translated_text: parsed["translated_content"],
-              translated_title: parsed["translated_title"]
+              translated_title: parsed["translated_title"],
             }
+          )
+        end
+      rescue JSON::ParserError
+        # Continue to other methods
+      end
+
+      # Method 2: Extract JSON object from content
+      json_start = content.index("{")
+      return nil unless json_start
+
+      json_part = content[json_start..-1]
+
+      # Find the end of the JSON object by counting braces
+      brace_count = 0
+      json_end = -1
+      json_part.chars.each_with_index do |char, index|
+        if char == "{"
+          brace_count += 1
+        elsif char == "}"
+          brace_count -= 1
+          if brace_count == 0
+            json_end = index
+            break
+          end
+        end
+      end
+
+      if json_end > 0
+        complete_json = json_part[0..json_end]
+        begin
+          parsed = JSON.parse(complete_json)
+          if parsed.is_a?(Hash) && parsed["translated_content"].present?
+            Rails.logger.info("Successfully parsed JSON response using brace counting")
+            return(
+              {
+                translated_text: parsed["translated_content"],
+                translated_title: parsed["translated_title"],
+              }
+            )
           end
         rescue JSON::ParserError => e
           Rails.logger.warn("JSON parsing failed: #{e.message}")
         end
       end
 
-      # Method 2: Try to find JSON that starts with translated_content
+      # Method 3: Try to extract from incomplete JSON
       if content.include?('"translated_content"')
-        begin
-          # Try to extract JSON starting from translated_content
-          json_start = content.index('{')
-          if json_start
-            json_part = content[json_start..-1]
-            # Try to find the end of the JSON
-            brace_count = 0
-            json_end = -1
-            json_part.chars.each_with_index do |char, index|
-              if char == '{'
-                brace_count += 1
-              elsif char == '}'
-                brace_count -= 1
-                if brace_count == 0
-                  json_end = index
-                  break
-                end
-              end
-            end
-            
-            if json_end > 0
-              complete_json = json_part[0..json_end]
-              parsed = JSON.parse(complete_json)
-              if parsed["translated_content"].present?
-                Rails.logger.info("Successfully parsed JSON response using brace counting")
-                return {
-                  translated_text: parsed["translated_content"],
-                  translated_title: parsed["translated_title"]
-                }
-              end
-            else
-              # JSON is incomplete, try to extract translated_content manually
-              Rails.logger.warn("JSON appears to be incomplete, attempting manual extraction")
-              return extract_from_incomplete_json(json_part)
-            end
-          end
-        rescue JSON::ParserError => e
-          Rails.logger.warn("Brace counting JSON parsing failed: #{e.message}")
-        end
+        Rails.logger.warn("JSON appears to be incomplete, attempting manual extraction")
+        return extract_from_incomplete_json(json_part || content)
       end
 
       nil
@@ -500,15 +522,18 @@ module BabelReunited
       if content_match
         translated_content = content_match[1]
         # Unescape JSON string
-        translated_content = translated_content.gsub('\\"', '"').gsub('\\n', "\n").gsub('\\\\', '\\')
-        
+        translated_content =
+          translated_content.gsub('\\"', '"').gsub('\\n', "\n").gsub('\\\\', '\\')
+
         Rails.logger.info("Successfully extracted translated_content from incomplete JSON")
-        return {
-          translated_text: translated_content,
-          translated_title: nil # Can't extract title from incomplete JSON
-        }
+        return(
+          {
+            translated_text: translated_content,
+            translated_title: nil, # Can't extract title from incomplete JSON
+          }
+        )
       end
-      
+
       nil
     end
 
@@ -545,7 +570,7 @@ module BabelReunited
             phase: "provider_error",
             provider_status: response.status,
             provider_body: raw_body.to_s[0, 4000], # truncate to avoid huge logs
-          }
+          },
         )
       rescue => _
         # best-effort logging only
