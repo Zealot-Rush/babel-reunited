@@ -1,5 +1,5 @@
 import { withPluginApi } from "discourse/lib/plugin-api"
-import LanguagePreferenceModal from "discourse/plugins/babel_reunited/discourse/components/modal/language-preference"
+import LanguagePreferenceModal from "discourse/plugins/babel-reunited/discourse/components/modal/language-preference"
 
 export default {
   initialize() {

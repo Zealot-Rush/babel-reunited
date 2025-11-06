@@ -5,7 +5,7 @@
 # meta_topic_id: TODO
 # version: 0.1.0
 # authors: Divine Rapier
-# url: https://github.com/divine-rapier/discourse-ai-translator
+# url: https://github.com/divine-rapier/babel-reunited
 # required_version: 2.7.0
 
 enabled_site_setting :babel_reunited_enabled

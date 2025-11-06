@@ -99,6 +99,82 @@ RAILS_ENV=production bin/rake assets:precompile
 
 ---
 
+## Rake Tasks
+
+### `babel_reunited:process_missing_posts`
+
+This rake task processes all posts that don't have any translations and adds translation jobs to Sidekiq for them.
+
+**Usage:**
+
+```bash
+# DRY RUN mode (default, preview only - no jobs will be queued)
+bin/rake babel_reunited:process_missing_posts
+# or explicitly
+DRY_RUN=true bin/rake babel_reunited:process_missing_posts
+
+# Actual execution mode (queues translation jobs)
+DRY_RUN=false bin/rake babel_reunited:process_missing_posts
+```
+
+**What it does:**
+
+1. Finds all posts that have no translation records at all
+2. Gets the auto-translate languages from `babel_reunited_auto_translate_languages` setting
+3. For each post without translations:
+   - Creates translation records with "translating" status
+   - Enqueues translation jobs to Sidekiq for each target language
+
+**Output:**
+
+- **DRY RUN mode**: Shows the number of posts found, sample posts (first 10), and how many translation jobs would be queued
+- **Actual execution**: Shows progress (every 100 posts), final statistics (processed count, failed count, queued jobs count)
+
+**Requirements:**
+
+- Plugin must be enabled (`babel_reunited_enabled` must be true)
+- Auto-translate languages must be configured (`babel_reunited_auto_translate_languages` must not be blank)
+
+**Example output (DRY RUN):**
+
+```
+Auto-translate languages: zh-cn, en, es
+
+Found 1523 posts without any translations
+
+DRY RUN mode - no jobs will be queued
+Use DRY_RUN=false to actually queue translation jobs
+
+Sample posts that would be processed:
+  Post ID: 123, Topic ID: 45, User: alice
+  Post ID: 124, Topic ID: 45, User: bob
+  ... and 1521 more posts
+
+Would queue 4569 translation jobs (1523 posts × 3 languages)
+```
+
+**Example output (Actual execution):**
+
+```
+Auto-translate languages: zh-cn, en, es
+
+Found 1523 posts without any translations
+Processing posts and queueing translation jobs...
+Processed 100/1523 posts...
+Processed 200/1523 posts...
+...
+
+==================================================
+Processing complete
+==================================================
+Processed: 1523 posts
+Failed: 0 posts
+Queued: 4569 translation jobs
+==================================================
+```
+
+---
+
 ## FAQ
 - Translation didn’t trigger:
   - Is `babel_reunited_enabled` turned on?
