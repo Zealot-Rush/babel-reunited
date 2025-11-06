@@ -214,6 +214,7 @@ module BabelReunited
         Translate the following HTML content to #{target_language}. 
         
         CRITICAL REQUIREMENTS:
+        - If the content contains multiple languages, unless it is a very small percentage of the content, all languages must be translated to the #{target_language}. Even the translated content has duplicated content, we should still translate all the languages.
         - The input is HTML content with links, formatting, and Discourse-specific elements
         - Translate ONLY the text content, NOT the HTML tags or attributes
         - Preserve ALL HTML tags exactly as they are (including <a>, <p>, <div>, <span>, etc.)
